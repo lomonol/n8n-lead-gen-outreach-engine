@@ -1,0 +1,399 @@
+{
+  "name": "Autonomous Inbound Reply & Bounce Intelligence Engine",
+  "nodes": [
+    {
+      "id": "wf3-poll-trigger",
+      "name": "Every 5 Mins (Inbox Poll)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf3-fetch-unread-emails",
+      "name": "Fetch Unread Inbound Emails",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// PLACEHOLDER: Ready to be wired to Gmail Trigger / IMAP read\n// When Gmail/IMAP credentials are provided, this node reads new unread emails from the outreach inbox.\n// For now, passes an empty array until active mailbox credentials are supplied.\nreturn [];"
+      }
+    },
+    {
+      "id": "wf3-detect-email-type",
+      "name": "Detect Bounce vs OOO vs Human Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const email = item.json;\n  const sender = (email.from || email.sender || '').toLowerCase();\n  const subject = (email.subject || '').toLowerCase();\n  const body = (email.text || email.body || '').toLowerCase();\n\n  // 1. Hard Bounce Detection\n  const isBounce = /mailer-daemon|postmaster|delivery-notification/i.test(sender) ||\n                   /delivery status notification|failure notice|undelivered mail|returned mail|message not delivered/i.test(subject);\n\n  // 2. Out of Office / Auto-responder\n  const isOOO = !isBounce && (/automatic reply|auto-reply|out of office|away from office|vacation response/i.test(subject) ||\n                /i am currently out of the office|i will be away|limited access to email/i.test(body));\n\n  const classification = isBounce ? 'BOUNCE' : (isOOO ? 'OUT_OF_OFFICE' : 'HUMAN_REPLY');\n\n  return {\n    json: {\n      ...email,\n      event_type: classification,\n      is_bounce: isBounce,\n      is_ooo: isOOO,\n      is_human: classification === 'HUMAN_REPLY'\n    }\n  };\n});"
+      }
+    },
+    {
+      "id": "wf3-switch-event",
+      "name": "Switch: By Event Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1060,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "bounce",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-bounce",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "BOUNCE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "ooo",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-ooo",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "OUT_OF_OFFICE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "human",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-human",
+                    "leftValue": "={{ $json.event_type }}",
+                    "rightValue": "HUMAN_REPLY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf3-log-bounce-suppression",
+      "name": "Log Bounce to Suppression List",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        160
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Domain"
+          ],
+          "value": {
+            "Domain": "={{ $json.recipient_domain || $json.from }}",
+            "Company Name": "={{ $json.company_name || 'Bounced Recipient' }}",
+            "Reason": "Hard Bounce",
+            "Notes": "={{ 'Hard bounce detected on ' + ($json.recipient_email || $json.from) + ': ' + ($json.subject || '') }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf3-activate-kill-switch",
+      "name": "Activate Kill Switch (Pause Sender)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        160
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.isPaused = true;\nstaticData.killSwitchActive = true;\nstaticData.pauseReason = `Hard bounce detected on ${$json.recipient_email || 'recipient'}`;\nstaticData.pausedAt = new Date().toISOString();\n\nreturn [{\n  json: {\n    status: 'KILL_SWITCH_ENGAGED',\n    reason: staticData.pauseReason,\n    paused_at: staticData.pausedAt\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf3-alert-discord-bounce",
+      "name": "Alert Discord: Bounce Circuit Breaker",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        160
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config: VA Profile & Settings').first().json.discord_webhook_url || 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  username: 'Outreach Safety Guard',\n  avatar_url: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',\n  embeds: [\n    {\n      title: '🛑 CIRCUIT BREAKER TRIGGERED: Hard Bounce Detected',\n      description: '**Attention:** A delivery failure / hard bounce was detected. Outreach sending has been **PAUSED AUTOMATICALLY** to protect your Gmail reputation.\\n\\n**Failed Recipient:** `' + ($json.recipient_email || 'Unknown') + '`\\n**Domain Suppressed:** `' + ($json.recipient_domain || 'Unknown') + '`',\n      color: 15158332,\n      footer: {\n        text: 'Safety Engine • Verify queue before resuming'\n      },\n      timestamp: new Date().toISOString()\n    }\n  ]\n}) }}"
+      }
+    },
+    {
+      "id": "wf3-classify-intent-llm",
+      "name": "Classify Reply Intent (OpenRouter / AI)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        440
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $json.openrouter_api_key || 'DUMMY_KEY' }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  model: 'meta-llama/llama-3.1-8b-instruct:free',\n  messages: [\n    {\n      role: 'system',\n      content: 'You are an email reply intent classifier for an automation agency. Analyze the incoming prospect email and return ONE JSON object with: intent (one of: POSITIVE_INTEREST, HARD_NEGATIVE, TIMING_OBJECTION, REFERRAL, QUESTION), confidence (0.0 to 1.0), summary (1 short sentence), and suggested_action (1 sentence explaining what the user should do next). Output ONLY valid JSON.'\n    },\n    {\n      role: 'user',\n      content: 'From: ' + $json.from + '\\nSubject: ' + $json.subject + '\\n\\nReply Content:\\n' + ($json.text || $json.body || '')\n    }\n  ],\n  temperature: 0.1,\n  response_format: { type: 'json_object' }\n}) }}"
+      }
+    },
+    {
+      "id": "wf3-parse-llm-intent",
+      "name": "Parse Intent Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        440
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const res = $input.first().json;\nlet parsed = {};\ntry {\n  const content = res.choices[0].message.content;\n  parsed = JSON.parse(content);\n} catch (e) {\n  parsed = { intent: 'QUESTION', summary: 'Could not parse intent structure', suggested_action: 'Review manually' };\n}\n\nreturn [{\n  json: {\n    ...$('Switch: By Event Type').item.json,\n    ai_intent: parsed.intent || 'QUESTION',\n    ai_summary: parsed.summary || '',\n    ai_suggested_action: parsed.suggested_action || '',\n    ai_confidence: parsed.confidence || 0.8\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf3-alert-discord-intent",
+      "name": "Post Intent Alert to Discord",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        440
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config: VA Profile & Settings').first().json.discord_webhook_url || 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  username: 'Inbound Intelligence',\n  avatar_url: 'https://cdn-icons-png.flaticon.com/512/3233/3233514.png',\n  embeds: [\n    {\n      title: ($json.ai_intent === 'POSITIVE_INTEREST' ? '🔥 HOT LEAD REPLY: ' : '📩 Inbound Reply: ') + ($json.from || 'Prospect'),\n      description: '**Intent:** `' + $json.ai_intent + '`\\n\\n**Prospect Message:**\\n```text\\n' + ($json.text || $json.body || '').slice(0, 600) + '\\n```\\n\\n**AI Summary:** ' + $json.ai_summary + '\\n**Suggested Action:** ' + $json.ai_suggested_action,\n      color: ($json.ai_intent === 'POSITIVE_INTEREST' ? 65280 : ($json.ai_intent === 'HARD_NEGATIVE' ? 16711680 : 3447003)),\n      footer: {\n        text: 'Inbound AI Classifier • OpenRouter'\n      },\n      timestamp: new Date().toISOString()\n    }\n  ]\n}) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Mins (Inbox Poll)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Unread Inbound Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Unread Inbound Emails": {
+      "main": [
+        [
+          {
+            "node": "Detect Bounce vs OOO vs Human Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Bounce vs OOO vs Human Reply": {
+      "main": [
+        [
+          {
+            "node": "Switch: By Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: By Event Type": {
+      "main": [
+        [
+          {
+            "node": "Log Bounce to Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Classify Reply Intent (OpenRouter / AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Bounce to Suppression List": {
+      "main": [
+        [
+          {
+            "node": "Activate Kill Switch (Pause Sender)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activate Kill Switch (Pause Sender)": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord: Bounce Circuit Breaker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Reply Intent (OpenRouter / AI)": {
+      "main": [
+        [
+          {
+            "node": "Parse Intent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Intent Response": {
+      "main": [
+        [
+          {
+            "node": "Post Intent Alert to Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

@@ -1,0 +1,357 @@
+{
+  "name": "Autonomous Outreach - 05: Portfolio Inbound & Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portfolio-contact",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "id": "wf5-webhook-trigger",
+      "name": "Portfolio Contact Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Note received by Laurence\"\n}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        180
+      ],
+      "id": "wf5-respond-webhook",
+      "name": "Respond to Webhook (200 OK)"
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const body = $json.body || $json;\nconst rawName = (body.name || '').trim();\nconst rawEmail = (body.email || '').trim().toLowerCase();\nconst rawMessage = (body.message || '').trim();\n\nconst domainMatch = rawEmail.includes('@') ? rawEmail.split('@')[1] : '';\nconst webmailDomains = ['gmail.com', 'googlemail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'];\nconst companyDomain = webmailDomains.includes(domainMatch) ? '' : domainMatch;\n\nreturn [{\n  json: {\n    name: rawName || 'Inbound Prospect',\n    email: rawEmail,\n    domain: companyDomain,\n    raw_domain: domainMatch,\n    message: rawMessage,\n    submitted_at: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        420
+      ],
+      "id": "wf5-parse-inbound",
+      "name": "Parse & Normalize Inbound Lead"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": false,
+        "limit": 1,
+        "filterByFormula": "={{ (() => {\n  const em = ($json.email || '').replace(/['\"\\\\]/g, '').trim();\n  const dom = ($json.domain || '').replace(/['\"\\\\]/g, '').trim();\n  if (!em && !dom) return 'RECORD_ID() = \"\"';\n  if (dom) return `OR({Email} = '${em}', {Domain} = '${dom}')`;\n  return `{Email} = '${em}'`;\n})() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        420
+      ],
+      "id": "wf5-search-crm",
+      "name": "Search CRM for Inbound Lead",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const searchResult = $input.first()?.json || {};\nconst lead = $('Parse & Normalize Inbound Lead').first().json;\n\nconst matchedId = searchResult.id || null;\nconst existingName = searchResult.fields?.Name || null;\nconst existingStatus = searchResult.fields?.['Review Status'] || null;\n\nreturn [{\n  json: {\n    ...lead,\n    matched_company_id: matchedId,\n    existing_name: existingName,\n    existing_status: existingStatus,\n    is_cold_lead_match: Boolean(matchedId)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        420
+      ],
+      "id": "wf5-merge-crm-match",
+      "name": "Merge Lead & Sequence Brake Decision"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-match-lead",
+              "leftValue": "={{ Boolean($json.is_cold_lead_match) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1160,
+        420
+      ],
+      "id": "wf5-if-matched",
+      "name": "If: Matched Existing Lead?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $json.matched_company_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Review Status": "Replied",
+            "Notes": "={{ `Inbound Form Note: ${$json.message}\\n(Previous Outreach Status: ${$json.existing_status || 'Unknown'})` }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        320
+      ],
+      "id": "wf5-update-company-replied",
+      "name": "Update Existing Company as Replied",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Domain"
+          ],
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Domain": "={{ $json.domain || ('inbound-' + $json.email) }}",
+            "Email": "={{ $json.email }}",
+            "Role": "Inbound Form Lead",
+            "Tier": "Tier A",
+            "Review Status": "Replied",
+            "Notes": "={{ `Inbound Portfolio Note: ${$json.message}` }}",
+            "City": "Inbound Visitor"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        520
+      ],
+      "id": "wf5-log-new-lead",
+      "name": "Log New Inbound Lead in CRM",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ (() => {\n  const d = $('Merge Lead & Sequence Brake Decision').first().json;\n  const isMatch = d.is_cold_lead_match;\n  return JSON.stringify({\n    alert_type: \"urgent\",\n    title: \"🔥 Hot Inbound Lead from Portfolio Contact Form\",\n    message: `From: ${d.name} <${d.email}>\\n` +\n      (isMatch ? `✅ Matched to cold outreach company: ${d.existing_name} (Cold follow-ups frozen!)\\n` : `⭐ New organic inbound visitor\\n`) +\n      `\\nMessage:\\n\"${d.message}\"`\n  });\n})() }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1660,
+        420
+      ],
+      "id": "wf5-notify-discord",
+      "name": "Notify Discord: Inbound Lead Alert"
+    }
+  ],
+  "connections": {
+    "Portfolio Contact Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (200 OK)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse & Normalize Inbound Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Normalize Inbound Lead": {
+      "main": [
+        [
+          {
+            "node": "Search CRM for Inbound Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search CRM for Inbound Lead": {
+      "main": [
+        [
+          {
+            "node": "Merge Lead & Sequence Brake Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Lead & Sequence Brake Decision": {
+      "main": [
+        [
+          {
+            "node": "If: Matched Existing Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Matched Existing Lead?": {
+      "main": [
+        [
+          {
+            "node": "Update Existing Company as Replied",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log New Inbound Lead in CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Existing Company as Replied": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord: Inbound Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log New Inbound Lead in CRM": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord: Inbound Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

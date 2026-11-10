@@ -1,0 +1,498 @@
+{
+  "name": "Autonomous Multi-Touch Follow-Up Sequencer",
+  "nodes": [
+    {
+      "id": "wf4-schedule-trigger",
+      "name": "Schedule Trigger (Every 30 Mins)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        400
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf4-check-killswitch",
+      "name": "Check Shared Kill-Switch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "http://outreach_discord_bot:5005/system/killswitch",
+        "sendHeaders": false
+      }
+    },
+    {
+      "id": "wf4-if-active",
+      "name": "If: Engine Active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_paused }}",
+              "value2": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf4-fetch-sent-drafts",
+      "name": "Fetch Sent Sequences from CRM",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        380
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "filterByFormula": "AND({Review Status} = 'Sent', {Sent At} != BLANK(), {Company} != '')",
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf4-eval-cadence",
+      "name": "Evaluate Cadence & Touch Due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        380
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst now = new Date();\nconst candidates = [];\n\nfor (const item of items) {\n  const fields = item.json.fields || item.json;\n  const draftId = item.json.id;\n  const draftTitle = fields['Draft Title'] || '';\n  const sentAtStr = fields['Sent At'];\n  if (!sentAtStr) continue;\n\n  const sentAt = new Date(sentAtStr);\n  const diffMs = now.getTime() - sentAt.getTime();\n  const diffDays = diffMs / (1000 * 60 * 60 * 24);\n\n  let nextTouch = null;\n  let bodyField = null;\n  let newTitleTag = '';\n\n  if (!draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 4.0 && fields['followup_1']) {\n      nextTouch = 2;\n      bodyField = 'followup_1';\n      newTitleTag = '[Touch 2 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 5.0 && fields['followup_2']) {\n      nextTouch = 3;\n      bodyField = 'followup_2';\n      newTitleTag = '[Touch 3 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 6.0 && fields['followup_3']) {\n      nextTouch = 4;\n      bodyField = 'followup_3';\n      newTitleTag = '[Sequence Completed]';\n    }\n  }\n\n  const companyRecId = (fields.Company && fields.Company.length) ? fields.Company[0] : null;\n  if (nextTouch && companyRecId) {\n    candidates.push({\n      draft_id: draftId,\n      company_record_id: companyRecId,\n      draft_title: draftTitle,\n      new_title_tag: newTitleTag,\n      original_subject: fields.Subject || '',\n      followup_body: fields[bodyField] || '',\n      next_touch: nextTouch,\n      touch_label: `Touch ${nextTouch}/4`,\n      days_since_last_send: Math.round(diffDays * 10) / 10\n    });\n  }\n}\n\nif (candidates.length === 0) return [];\n// Sort candidates by longest waiting time\ncandidates.sort((a, b) => b.days_since_last_send - a.days_since_last_send);\n\n// Pass up to 5 candidates for office-hour evaluation\nreturn candidates.slice(0, 5).map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "wf4-fetch-company",
+      "name": "Fetch Recipient Company",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1400,
+        380
+      ],
+      "parameters": {
+        "operation": "get",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $json.company_record_id }}"
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "wf4-validate-gate",
+      "name": "Validate Lead & Office Hours Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        380
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const companyItems = $input.all();\nconst candidateItems = $('Evaluate Cadence & Touch Due').all();\n\nfunction resolveTimezone(cityStr) {\n  const city = (cityStr || '').trim();\n  if (/\\b(NY|FL|GA|NC|PA|OH|VA|MA|DC|NJ|MI|MD|SC)\\b/i.test(city) || /new york|miami|atlanta|tampa|orlando|charlotte|boston|philadelphia|detroit/i.test(city)) {\n    return 'America/New_York';\n  } else if (/\\b(CA|WA|OR|NV)\\b/i.test(city) || /los angeles|san francisco|san diego|seattle|portland|las vegas|sacramento|san jose/i.test(city)) {\n    return 'America/Los_Angeles';\n  } else if (/\\b(CO|AZ|UT|NM)\\b/i.test(city) || /denver|phoenix|salt lake|albuquerque/i.test(city)) {\n    return 'America/Denver';\n  }\n  return 'America/Chicago';\n}\n\nfunction checkOfficeHours(tz) {\n  const formatter = new Intl.DateTimeFormat('en-US', {\n    timeZone: tz,\n    hour: 'numeric',\n    weekday: 'short',\n    hourCycle: 'h23'\n  });\n  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));\n  const localHour = parseInt(parts.hour, 10);\n  const localWeekday = parts.weekday;\n  const isOfficeHours = !['Sat', 'Sun'].includes(localWeekday) && localHour >= 9 && localHour < 17;\n  return { isOfficeHours, localHour, localWeekday };\n}\n\nconst companiesById = {};\nfor (const ci of companyItems) {\n  if (ci.json && ci.json.id) {\n    companiesById[ci.json.id] = ci.json;\n  }\n}\n\nconst senderFull = 'Laurence Emmanuel Supangan';\nconst role = 'Workflow Automation Specialist';\nconst portfolio = 'portfolio.itslaurence.dev';\nconst address = '38 San Jose St., Brgy. San Antonio, Quezon City, Metro Manila 1105, Philippines';\n\nfor (let i = 0; i < candidateItems.length; i++) {\n  const candidate = candidateItems[i].json;\n  const cRecord = companiesById[candidate.company_record_id];\n  const company = (cRecord && (cRecord.fields || cRecord)) || {};\n  const companyId = cRecord ? cRecord.id : candidate.company_record_id;\n\n  // Skip replied or rejected leads\n  const revStatus = (company['Review Status'] || '').toLowerCase();\n  // Only leads in good standing whose initial outreach was 'Sent' are eligible for follow-ups\n  if (revStatus !== 'sent') {\n    continue;\n  }\n\n  // Validate email\n  const rawEmail = company['Email'] || '';\n  const emailMatch = rawEmail.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})/);\n  if (!emailMatch) {\n    continue;\n  }\n  const toEmail = emailMatch[1].toLowerCase();\n\n  // Office hours check\n  const targetTz = resolveTimezone(company['City']);\n  const { isOfficeHours, localHour, localWeekday } = checkOfficeHours(targetTz);\n\n  if (isOfficeHours) {\n    // Non-deceptive, professional follow-up subject line\n    const rawSub = candidate.original_subject || 'workflow automation inquiry';\n    const cleanSub = rawSub.replace(/^re:\\s*/i, '').replace(/^follow-up:\\s*/i, '').trim();\n    // Maintain exact original subject line so Gmail & Outlook natively thread follow-ups\n    const threadSubject = cleanSub;\n\n    // Clean single sign-off\n    const cleanBodyText = candidate.followup_body.replace(/\\s*-\\s*Laurence.*$/is, '').trim();\n    const emailBody = `${cleanBodyText}\n\nLaurence\n${portfolio}\n${address}\nIf this isn't relevant, reply \"no\" and I won't email again.`;\n\n    const baseTitle = candidate.draft_title.replace(/\\s*\\[Touch \\d Sent\\]|\\s*\\[Sequence Completed\\]/g, '').trim();\n    const updatedDraftTitle = `${baseTitle} ${candidate.new_title_tag}`.trim();\n\n    return [{\n      json: {\n        can_send: true,\n        draft_id: candidate.draft_id,\n        company_id: companyId,\n        company_name: company['Name'] || 'Prospect',\n        to_email: toEmail,\n        subject: threadSubject,\n        body: emailBody,\n        next_touch: candidate.next_touch,\n        touch_label: candidate.touch_label,\n        updated_draft_title: updatedDraftTitle,\n        timezone: targetTz,\n        local_time: `${localWeekday} ${localHour}:00`\n      }\n    }];\n  }\n}\n\nreturn [{ json: { can_send: false, reason: 'No eligible follow-up candidate currently within local business hours.' } }];"
+      }
+    },
+    {
+      "id": "wf4-if-can-send",
+      "name": "If: Can Send Now?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        380
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.can_send }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf4-lock-draft",
+      "name": "Pre-Send Lock: Update Draft Cadence",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2120,
+        260
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $json.draft_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Draft Title": "={{ $json.updated_draft_title }}",
+            "Sent At": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf4-send-smtp",
+      "name": "Send Follow-Up via SMTP",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2360,
+        260
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "fromEmail": "Laurence Supangan <you@example.com>",
+        "toEmail": "={{ $('Validate Lead & Office Hours Gate').first().json.to_email }}",
+        "subject": "={{ $('Validate Lead & Office Hours Gate').first().json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $('Validate Lead & Office Hours Gate').first().json.body }}",
+        "options": {
+          "replyTo": "you@example.com"
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_ME",
+          "name": "Laurence Outreach Gmail (SMTP)"
+        }
+      }
+    },
+    {
+      "id": "wf4-if-sent",
+      "name": "If: SMTP Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        260
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ Boolean($json.messageId) }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf4-update-company",
+      "name": "Update Company Sequence Log",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2840,
+        160
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $('Validate Lead & Office Hours Gate').first().json.company_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sent At": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf4-notify-discord",
+      "name": "Notify Discord: Follow-Up Dispatched",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3080,
+        160
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/feed",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  event_type: \"email_sent\",\n  data: {\n    company_name: $('Validate Lead & Office Hours Gate').first().json.company_name + \" (\" + $('Validate Lead & Office Hours Gate').first().json.touch_label + \")\",\n    recipient_email: $('Validate Lead & Office Hours Gate').first().json.to_email,\n    subject: $('Validate Lead & Office Hours Gate').first().json.subject,\n    tier: $('Validate Lead & Office Hours Gate').first().json.touch_label,\n    timezone: $('Validate Lead & Office Hours Gate').first().json.timezone,\n    next_followup: $('Validate Lead & Office Hours Gate').first().json.next_touch === 4 ? \"Sequence Complete\" : \"Next touch scheduled in sequence\"\n  }\n}) }}"
+      }
+    },
+    {
+      "id": "wf4-alert-error",
+      "name": "Alert Discord: Follow-Up Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2840,
+        360
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  alert_type: \"critical\",\n  title: \"🚨 Follow-Up Send Failure\",\n  message: \"Failed sending \" + $('Validate Lead & Office Hours Gate').first().json.touch_label + \" to \" + $('Validate Lead & Office Hours Gate').first().json.to_email + \" (\" + $('Validate Lead & Office Hours Gate').first().json.company_name + \"). Error: \" + ($json.error ? $json.error.message : \"SMTP failure\")\n}) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (Every 30 Mins)": {
+      "main": [
+        [
+          {
+            "node": "Check Shared Kill-Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Shared Kill-Switch": {
+      "main": [
+        [
+          {
+            "node": "If: Engine Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Engine Active?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Sent Sequences from CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Sent Sequences from CRM": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Cadence & Touch Due",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Cadence & Touch Due": {
+      "main": [
+        [
+          {
+            "node": "Fetch Recipient Company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Recipient Company": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead & Office Hours Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead & Office Hours Gate": {
+      "main": [
+        [
+          {
+            "node": "If: Can Send Now?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Can Send Now?": {
+      "main": [
+        [
+          {
+            "node": "Pre-Send Lock: Update Draft Cadence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Send Lock: Update Draft Cadence": {
+      "main": [
+        [
+          {
+            "node": "Send Follow-Up via SMTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Follow-Up via SMTP": {
+      "main": [
+        [
+          {
+            "node": "If: SMTP Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: SMTP Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "Update Company Sequence Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert Discord: Follow-Up Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Company Sequence Log": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord: Follow-Up Dispatched",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

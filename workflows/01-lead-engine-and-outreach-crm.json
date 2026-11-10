@@ -1,0 +1,1575 @@
+{
+  "name": "Autonomous Multi-Niche VA Lead Engine & Outreach CRM",
+  "nodes": [
+    {
+      "id": "bcab71d1-b88f-44b6-844c-281d1e922477",
+      "name": "Start Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        160,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "70bdea7e-21ec-43df-8090-4b86cbea2c96",
+      "name": "Every 20 Mins",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        480
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 20
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "df9f64e5-9c6f-4446-a947-ba4d9e89512c",
+      "name": "Config: VA Profile & Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        360,
+        400
+      ],
+      "parameters": {
+        "mode": "manual",
+        "duplicateOutput": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "va-role",
+              "name": "va_role",
+              "value": "Automation VA",
+              "type": "string"
+            },
+            {
+              "id": "sender-name",
+              "name": "sender_name",
+              "value": "Laurence Supangan",
+              "type": "string"
+            },
+            {
+              "id": "portfolio-link",
+              "name": "portfolio_link",
+              "value": "itslaurence.dev",
+              "type": "string"
+            },
+            {
+              "id": "sender-location",
+              "name": "sender_location",
+              "value": "Metro Manila, Philippines",
+              "type": "string"
+            },
+            {
+              "id": "sender-address",
+              "name": "sender_physical_address",
+              "value": "YOUR POSTAL ADDRESS",
+              "type": "string"
+            },
+            {
+              "id": "batch-size",
+              "name": "batch_size",
+              "value": 4,
+              "type": "number"
+            },
+            {
+              "id": "airtable-base",
+              "name": "airtable_base_id",
+              "value": "appYOUR_BASE_ID",
+              "type": "string"
+            },
+            {
+              "id": "airtable-table",
+              "name": "airtable_table_name",
+              "value": "tblYOUR_TABLE_ID",
+              "type": "string"
+            },
+            {
+              "id": "voice-notes",
+              "name": "voice_notes",
+              "value": "Conversational, articulate, consultative, peer-to-peer. Sounds like a knowledgeable technical professional speaking directly to a business owner or operations lead. Use natural sentence transitions. No fake cheerfulness, no robotic brevity, no marketing jargon.",
+              "type": "string"
+            },
+            {
+              "id": "proof-points",
+              "name": "proof_points",
+              "value": "[{\"id\": \"re-1\", \"categories\": [\"realestate\"], \"signals\": [\"portal_intake\", \"form\", \"general\"], \"text\": \"built an n8n workflow that routes new buyer and seller inquiries from website forms into CRM contact records and alerts agents in Slack within 30 seconds\"}, {\"id\": \"re-2\", \"categories\": [\"realestate\"], \"signals\": [\"reviews_volume\", \"rating_reputation\", \"booking\"], \"text\": \"built an automated intake pipeline that parses property inquiries, tags the property interest in the CRM, and sends an instant booking link to the client\"}, {\"id\": \"re-3\", \"categories\": [\"realestate\"], \"signals\": [\"general\", \"deals\", \"transaction\"], \"text\": \"automated the handoff between signed client agreements, CRM status updates, and transaction task checklists in ClickUp\"}, {\"id\": \"agency-1\", \"categories\": [\"agency\"], \"signals\": [\"portal_intake\", \"form\", \"lead_intake\"], \"text\": \"built an n8n onboarding flow that routes website inquiries into Slack alerts, CRM deals, and ClickUp project boards within 30 seconds\"}, {\"id\": \"agency-2\", \"categories\": [\"agency\"], \"signals\": [\"reviews_volume\", \"rating_reputation\"], \"text\": \"built an automated lead routing system that scores inbound website inquiries and assigns them to account managers in HubSpot automatically\"}, {\"id\": \"agency-3\", \"categories\": [\"agency\"], \"signals\": [\"booking\", \"general\"], \"text\": \"automated the handoff between signed client proposals, Google Drive folder creation, and client onboarding boards in Asana\"}, {\"id\": \"aaa-1\", \"categories\": [\"aaa\"], \"signals\": [\"portal_intake\", \"form\", \"general\"], \"text\": \"built n8n and webhook pipelines for AI automation agencies handling custom CRM integrations and multi-step tool execution on overflow capacity\"}, {\"id\": \"aaa-2\", \"categories\": [\"aaa\"], \"signals\": [\"booking\", \"lead_intake\"], \"text\": \"developed resilient n8n backend architectures connecting client webhooks to Airtable, Slack, and LLM endpoints for agency client deliveries\"}, {\"id\": \"legal-1\", \"categories\": [\"legal\"], \"signals\": [\"portal_intake\", \"form\", \"lead_intake\"], \"text\": \"built an automated intake pipeline for boutique law practices that routes new consultation forms into Clio contact records and alerts the intake paralegal\"}, {\"id\": \"legal-2\", \"categories\": [\"legal\"], \"signals\": [\"booking\", \"rating_reputation\"], \"text\": \"automated consultation scheduling and pre-meeting case brief dossiers for commercial law firms\"}, {\"id\": \"acc-1\", \"categories\": [\"accounting\"], \"signals\": [\"portal_intake\", \"form\", \"general\"], \"text\": \"built an automated onboarding flow for CPA practices that tracks document uploads, triggers automated client reminder texts, and updates client status in Karbon\"}, {\"id\": \"acc-2\", \"categories\": [\"accounting\"], \"signals\": [\"booking\", \"rating_reputation\"], \"text\": \"automated client tax document collection pipelines that eliminate back-and-forth email chasing for boutique accounting teams\"}, {\"id\": \"prop-1\", \"categories\": [\"propertymgmt\"], \"signals\": [\"portal_intake\", \"form\", \"emergency\"], \"text\": \"built a maintenance request triage pipeline that categorizes inbound tenant requests by urgency and alerts dispatch technicians in Slack\"}, {\"id\": \"prop-2\", \"categories\": [\"propertymgmt\"], \"signals\": [\"booking\", \"general\"], \"text\": \"automated tenant inquiry routing and tour scheduling handoffs between website forms and property manager calendars\"}, {\"id\": \"staff-1\", \"categories\": [\"staffing\"], \"signals\": [\"portal_intake\", \"form\", \"lead_intake\"], \"text\": \"built an automated resume intake and candidate qualification flow that parses inbound applications and syncs candidate records with the ATS\"}, {\"id\": \"adv-1\", \"categories\": [\"advisory\"], \"signals\": [\"portal_intake\", \"form\", \"lead_intake\"], \"text\": \"built an n8n pipeline that routes consultation intake forms directly into the CRM and generates pre-meeting advisor briefs automatically\"}, {\"id\": \"adv-2\", \"categories\": [\"advisory\"], \"signals\": [\"booking\", \"rating_reputation\"], \"text\": \"automated a consultation pipeline that syncs Calendly bookings with client record creation and pre-call questionnaire reminders\"}, {\"id\": \"adv-3\", \"categories\": [\"advisory\"], \"signals\": [\"reviews_volume\", \"general\"], \"text\": \"built an automated client intake flow that gathers initial documents, logs client milestones into the CRM, and alerts the lead advisor\"}, {\"id\": \"contractor-1\", \"categories\": [\"contractor\"], \"signals\": [\"reviews_volume\", \"job_completion\"], \"text\": \"built an automated sequence connecting field software to automated customer text alerts and review requests upon job completion\"}, {\"id\": \"contractor-2\", \"categories\": [\"contractor\"], \"signals\": [\"portal_intake\", \"form\", \"estimates\"], \"text\": \"set up an n8n workflow that triggers automated SMS review links the moment a job is marked complete in Jobber\"}, {\"id\": \"contractor-3\", \"categories\": [\"contractor\"], \"signals\": [\"emergency\", \"quote\", \"general\"], \"text\": \"built a quote request triage flow that routes emergency service calls and web inquiries directly to dispatched technicians\"}, {\"id\": \"gen-1\", \"categories\": [\"general\", \"fallback\"], \"signals\": [\"general\", \"form\"], \"text\": \"built back-office automations in n8n that eliminate manual data entry between website forms, CRMs, and team communication tools\"}, {\"id\": \"gen-2\", \"categories\": [\"general\", \"fallback\"], \"signals\": [\"general\", \"booking\"], \"text\": \"automated multi-step client intake pipelines that cut out 15+ hours of repetitive data entry each week\"}]",
+              "type": "string"
+            },
+            {
+              "id": "offers-map",
+              "name": "offers",
+              "value": "{\"Automation VA\": \"send a 2-minute video walkthrough showing how that workflow would run for your setup\", \"Social Media Manager (SMM)\": \"send one sample carousel built from your recent project highlights\", \"Executive VA\": \"send a one-page executive calendar-triage checklist tailored for your setup\", \"General VA\": \"send a one-page checklist for streamlining client intake and follow-up handoffs\"}",
+              "type": "string"
+            },
+            {
+              "id": "writing-samples",
+              "name": "writing_samples",
+              "value": "[\"I was looking at Francis Financial and noticed your team has built a strong reputation in NYC with 50+ client reviews on Google. For a boutique advisory practice, new client consultations usually begin through website forms or intro calls. How do those prospective client inquiries currently get routed into your CRM and advisor calendars?\\n\\nI'm Laurence, an automation specialist based in Manila. I build custom n8n pipelines for professional practices, especially around automating client intake triage, CRM data enrichment, and pre-meeting prep dossiers.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.\", \"I came across Vab Media while researching digital agencies in New York. With active client campaigns running, new project inquiries often come in through web forms or direct referrals. How does your team currently handle the handoff between qualifying an inbound lead and getting their kickoff docs set up in your project tracker?\\n\\nI'm Laurence, a workflow automation specialist based in Manila. I build n8n workflows that connect inquiry forms directly to Slack alerts, CRM deals, and client onboarding boards in ClickUp or Asana without copying data by hand.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.\", \"I noticed Summit Roofing has earned over 140 reviews on Google across Austin. When an estimate is delivered or a roofing project wraps up, does your review follow-up happen automatically via text, or does someone in the office have to remember to send it manually?\\n\\nI'm Laurence, an automation specialist based in Manila. I build custom n8n flows for contractors, specifically connecting field software like Jobber or ServiceTitan to automated customer text sequences and QuickBooks.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.\"]",
+              "type": "string"
+            },
+            {
+              "id": "cfg-role-titles",
+              "name": "role_titles",
+              "value": "{\"Automation VA\": [\"automation specialist\", \"workflow automation specialist\"], \"Executive VA\": [\"executive assistant\", \"remote operations coordinator\", \"fractional executive assistant\"], \"Social Media Manager (SMM)\": [\"content & social media specialist\", \"social media manager\", \"creative content repurposing specialist\"], \"General VA\": [\"operations specialist\", \"back-office operations coordinator\", \"administrative operations specialist\"]}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-ctas",
+              "name": "ctas",
+              "value": "{\"Automation VA\": [\"I would be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I will send over a video demo. If it helps, we can talk. If not, no worries.\", \"I would be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I will send over a video demo of how it runs. If it helps, we can talk. If not, no worries.\"], \"Executive VA\": [\"I would be glad to map out an executive calendar-triage and delegation workflow for your team for free. No call needed first. Just let me know what tools you manage and I will send over a sample breakdown. If it helps, we can talk. If not, no worries.\"], \"Social Media Manager (SMM)\": [\"I would be glad to design a custom carousel and video reel mockup from your recent case studies for free. No call needed first. Just reply with a link to a project you are proud of and I will send the draft over. If you like it, we can talk. If not, keep it with my compliments.\"], \"General VA\": [\"I would be glad to map out an intake triage SOP and routing checklist for your team for free. No call needed first. Just let me know how customer inquiries currently come in and I will send over the workflow draft. If it helps, we can talk. If not, no worries.\"]}",
+              "type": "string"
+            },
+            {
+              "id": "cfg-airtable_companies_table",
+              "name": "airtable_companies_table",
+              "value": "tblYOUR_TABLE_ID",
+              "type": "string"
+            },
+            {
+              "id": "cfg-airtable_drafts_table",
+              "name": "airtable_drafts_table",
+              "value": "tblYOUR_TABLE_ID",
+              "type": "string"
+            },
+            {
+              "id": "cfg-airtable_suppression_table",
+              "name": "airtable_suppression_table",
+              "value": "tblYOUR_TABLE_ID",
+              "type": "string"
+            },
+            {
+              "id": "discord-webhook",
+              "name": "discord_webhook_url",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "daily-draft-cap",
+              "name": "daily_draft_cap",
+              "value": 25,
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fbb9b04e-d14c-4b9b-95e2-33f8f2645c7c",
+      "name": "Auto City & Niche Rotator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.rotationIndex = (staticData.rotationIndex || 0) + 1;\n\nconst cities = [\n  'Austin, TX', 'London, UK', 'Sydney, Australia', 'Miami, FL', 'Toronto, Canada',\n  'Chicago, IL', 'Melbourne, Australia', 'New York, NY', 'Denver, CO', 'Manchester, UK',\n  'San Francisco, CA', 'Vancouver, Canada', 'Atlanta, GA', 'Brisbane, Australia', 'Dallas, TX'\n];\n\nconst config = $('Config: VA Profile & Settings').first().json;\nconst role = config.va_role || 'Automation VA';\n\nconst nichesByRole = {\n  'Automation VA': [\n    // 1. Agency Partners & AAAs (Overflow / Subcontracting)\n    { query: 'AI Automation Agency', plural: 'automation agencies', pain: 'client workflow delivery and n8n overflow development' },\n    { query: 'Lead Generation Agency', plural: 'lead generation agencies', pain: 'speed-to-lead routing and client CRM automation' },\n    { query: 'Web Design Agency', plural: 'web design studios', pain: 'client form handoffs and backend workflow integrations' },\n    { query: 'Digital Marketing Agency', plural: 'digital agencies', pain: 'inquiry intake and client onboarding' },\n\n    // 2. High-Ticket Trade Contractors\n    { query: 'Commercial Roofing Contractor', plural: 'commercial roofers', pain: 'job completion and review collection' },\n    { query: 'Commercial HVAC Contractor', plural: 'HVAC contractors', pain: 'service dispatching and job-completion review collection' },\n    { query: 'Commercial Solar Contractor', plural: 'solar contractors', pain: 'consultation intake and site survey scheduling' },\n\n    // 3. Professional & Business Services\n    { query: 'Commercial Law Firm', plural: 'law practices', pain: 'client intake routing and consultation document prep' },\n    { query: 'CPA Accounting Firm', plural: 'accounting firms', pain: 'client document collection and onboarding workflows' },\n    { query: 'Property Management Company', plural: 'property management teams', pain: 'maintenance request triage and tenant inquiry routing' },\n    { query: 'Boutique Advisory Firm', plural: 'consulting firms', pain: 'consult bookings and pre-meeting prep' },\n    { query: 'Real Estate Agency', plural: 'real estate brokerages', pain: 'property inquiries and agent lead distribution' },\n    { query: 'Staffing Agency', plural: 'recruiting agencies', pain: 'candidate application parsing and interview scheduling' },\n    { query: 'Wealth Management Firm', plural: 'wealth management advisors', pain: 'client onboarding and portfolio review scheduling' }\n  ],\n  'Social Media Manager (SMM)': [\n    { query: 'Creative Branding Studio', plural: 'creative studios', pain: 'client case studies and weekly short-form video reels' },\n    { query: 'E-commerce Brand', plural: 'e-commerce brands', pain: 'product catalogs and organic social clips' },\n    { query: 'Digital Marketing Agency', plural: 'marketing agencies', pain: 'campaign wins and visual LinkedIn carousels' }\n  ],\n  'Executive VA': [\n    { query: 'Boutique Advisory Firm', plural: 'consulting firms', pain: 'executive calendar triage and client prep' },\n    { query: 'Commercial Law Firm', plural: 'law firms', pain: 'consultation intake and executive scheduling' },\n    { query: 'Accounting Firm', plural: 'accounting firms', pain: 'inbox triage and client document coordination' }\n  ],\n  'General VA': [\n    { query: 'Commercial Roofing Contractor', plural: 'contractors', pain: 'customer inquiry response and job dispatching' },\n    { query: 'Property Management Company', plural: 'property managers', pain: 'tenant inquiries and vendor coordination' },\n    { query: 'Dental Clinic', plural: 'dental clinics', pain: 'appointment reminders and patient intake follow-up' }\n  ]\n};\n\nconst niches = nichesByRole[role] || nichesByRole['Automation VA'];\n\n// Full combinatorial coverage: cycles through all (cities * niches) without missing combos\nconst totalCombinations = cities.length * niches.length;\nconst currentStep = (staticData.rotationIndex - 1) % totalCombinations;\nconst nicheIndex = currentStep % niches.length;\nconst cityIndex = Math.floor(currentStep / niches.length) % cities.length;\n\nconst targetCity = cities[cityIndex];\nconst targetNiche = niches[nicheIndex];\nconst searchQuery = `${targetNiche.query} in ${targetCity}`;\n\nreturn [{\n  json: {\n    ...config,\n    search_query: searchQuery,\n    target_city: targetCity,\n    target_category: targetNiche.query,\n    category_plural: targetNiche.plural,\n    base_pain_area: targetNiche.pain,\n    rotation_index: staticData.rotationIndex,\n    rotation_coverage: `${cityIndex + 1}/${cities.length} cities, ${nicheIndex + 1}/${niches.length} niches (combo ${currentStep + 1}/${totalCombinations})`\n  }\n}];",
+        "mode": "runOnceForAllItems"
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "c9c80ee1-739b-44a1-be0b-1371dc474683",
+      "name": "Live Google Maps Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1180,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://gmaps_scraper_api_service:8001/scrape-get?query={{ encodeURIComponent($json.search_query) }}&max_places={{ $json.batch_size }}&lang=en&headless=true&concurrency=3",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": true
+            }
+          },
+          "timeout": 180000
+        }
+      }
+    },
+    {
+      "id": "204880e5-e073-49a5-b77c-17691c82df34",
+      "name": "Extract Business & Domain Info",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1400,
+        400
+      ],
+      "parameters": {
+        "mode": "manual",
+        "duplicateOutput": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f-bizname",
+              "name": "business_name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f-website",
+              "name": "website",
+              "value": "={{ $json.website || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-domain",
+              "name": "domain",
+              "value": "={{\n  (() => {\n    const raw = ($json.website || '').trim();\n    if (!raw) return '';\n    const clean = raw.replace(/^https?:\\/\\//i, '').replace(/^www\\./i, '').split('/')[0].split('?')[0].split(':')[0].toLowerCase().trim();\n    const socialBlocklist = ['facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com', 'x.com', 'linktr.ee', 'wixsite.com', 'yelp.com', 'yellowpages.com', 'tripadvisor.com', 'tiktok.com', 'youtube.com'];\n    if (socialBlocklist.some(s => clean === s || clean.endsWith('.' + s))) {\n      return '';\n    }\n    return clean;\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "f-phone",
+              "name": "phone",
+              "value": "={{ $json.phone || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-address",
+              "name": "address",
+              "value": "={{ $json.address || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-rating",
+              "name": "rating",
+              "value": "={{ $json.rating || null }}",
+              "type": "number"
+            },
+            {
+              "id": "f-reviews",
+              "name": "reviews_count",
+              "value": "={{ $json.reviews_count || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "f-bizstatus",
+              "name": "business_status",
+              "value": "={{ $json.business_status || 'OPERATIONAL' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-placeid",
+              "name": "place_id",
+              "value": "={{ $json.place_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-city",
+              "name": "target_city",
+              "value": "={{ $('Auto City & Niche Rotator').first().json.target_city }}",
+              "type": "string"
+            },
+            {
+              "id": "f-category",
+              "name": "target_category",
+              "value": "={{ $('Auto City & Niche Rotator').first().json.target_category }}",
+              "type": "string"
+            },
+            {
+              "id": "f-plural",
+              "name": "category_plural",
+              "value": "={{ $('Auto City & Niche Rotator').first().json.category_plural }}",
+              "type": "string"
+            },
+            {
+              "id": "f-pain",
+              "name": "base_pain_area",
+              "value": "={{ $('Auto City & Niche Rotator').first().json.base_pain_area }}",
+              "type": "string"
+            },
+            {
+              "id": "f-role",
+              "name": "va_role",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.va_role }}",
+              "type": "string"
+            },
+            {
+              "id": "f-sender",
+              "name": "sender_name",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.sender_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f-portfolio",
+              "name": "portfolio_link",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.portfolio_link }}",
+              "type": "string"
+            },
+            {
+              "id": "f-location",
+              "name": "sender_location",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.sender_location }}",
+              "type": "string"
+            },
+            {
+              "id": "f-address-send",
+              "name": "sender_physical_address",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.sender_physical_address }}",
+              "type": "string"
+            },
+            {
+              "id": "f-airtable-base",
+              "name": "airtable_base_id",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.airtable_base_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f-airtable-table",
+              "name": "airtable_table_name",
+              "value": "={{ $('Config: VA Profile & Settings').first().json.airtable_table_name }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "19b5c2a1-77da-4e89-b003-88ec0c39f110",
+      "name": "Filter: Has Contact Path",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        1840,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-domain",
+              "leftValue": "={{ $json.domain }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "51d62527-1cda-49c1-a2e6-a09bb611206b",
+      "name": "DNS MX Lookup (Google DoH)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2060,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://dns.google/resolve?name={{ $json.domain }}&type=MX",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "settings": {
+        "onError": "continueRegularOutput"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "38579b68-1c0f-49b8-8984-5d7c874f13af",
+      "name": "Evaluate Mail Server Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2280,
+        400
+      ],
+      "parameters": {
+        "mode": "manual",
+        "duplicateOutput": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f-bizname",
+              "name": "business_name",
+              "value": "={{ $('Deduplicate Leads').item.json.business_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f-website",
+              "name": "website",
+              "value": "={{ $('Deduplicate Leads').item.json.website || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-domain",
+              "name": "domain",
+              "value": "={{ $('Deduplicate Leads').item.json.domain || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-phone",
+              "name": "phone",
+              "value": "={{ $('Deduplicate Leads').item.json.phone || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-address",
+              "name": "address",
+              "value": "={{ $('Deduplicate Leads').item.json.address || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-rating",
+              "name": "rating",
+              "value": "={{ $('Deduplicate Leads').item.json.rating || null }}",
+              "type": "number"
+            },
+            {
+              "id": "f-reviews",
+              "name": "reviews_count",
+              "value": "={{ $('Deduplicate Leads').item.json.reviews_count || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "f-bizstatus",
+              "name": "business_status",
+              "value": "={{ $('Deduplicate Leads').item.json.business_status || 'OPERATIONAL' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-placeid",
+              "name": "place_id",
+              "value": "={{ $('Deduplicate Leads').item.json.place_id || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f-city",
+              "name": "target_city",
+              "value": "={{ $('Deduplicate Leads').item.json.target_city }}",
+              "type": "string"
+            },
+            {
+              "id": "f-category",
+              "name": "target_category",
+              "value": "={{ $('Deduplicate Leads').item.json.target_category }}",
+              "type": "string"
+            },
+            {
+              "id": "f-plural",
+              "name": "category_plural",
+              "value": "={{ $('Deduplicate Leads').item.json.category_plural }}",
+              "type": "string"
+            },
+            {
+              "id": "f-pain",
+              "name": "base_pain_area",
+              "value": "={{ $('Deduplicate Leads').item.json.base_pain_area }}",
+              "type": "string"
+            },
+            {
+              "id": "f-role",
+              "name": "va_role",
+              "value": "={{ $('Deduplicate Leads').item.json.va_role }}",
+              "type": "string"
+            },
+            {
+              "id": "f-sender",
+              "name": "sender_name",
+              "value": "={{ $('Deduplicate Leads').item.json.sender_name }}",
+              "type": "string"
+            },
+            {
+              "id": "f-portfolio",
+              "name": "portfolio_link",
+              "value": "={{ $('Deduplicate Leads').item.json.portfolio_link }}",
+              "type": "string"
+            },
+            {
+              "id": "f-location",
+              "name": "sender_location",
+              "value": "={{ $('Deduplicate Leads').item.json.sender_location }}",
+              "type": "string"
+            },
+            {
+              "id": "f-address-send",
+              "name": "sender_physical_address",
+              "value": "={{ $('Deduplicate Leads').item.json.sender_physical_address }}",
+              "type": "string"
+            },
+            {
+              "id": "f-airtable-base",
+              "name": "airtable_base_id",
+              "value": "={{ $('Deduplicate Leads').item.json.airtable_base_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f-airtable-table",
+              "name": "airtable_table_name",
+              "value": "={{ $('Deduplicate Leads').item.json.airtable_table_name }}",
+              "type": "string"
+            },
+            {
+              "id": "eval-has-mx",
+              "name": "has_mail_server",
+              "value": "={{ Boolean($('Deduplicate Leads').item.json.domain && $json.Answer && $json.Answer.length > 0) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "eval-status",
+              "name": "verification_status",
+              "value": "={{ !$('Deduplicate Leads').item.json.domain ? 'NO_DOMAIN' : ($json.Answer && $json.Answer.length > 0 ? 'MAIL_SERVER_VERIFIED' : 'NO_MX_RECORDS') }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "acd13f07-d145-4e48-be68-4ae937b0064c",
+      "name": "Fetch Website Signals (Jina)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2500,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://r.jina.ai/{{ $json.website }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "neverError": true
+            }
+          },
+          "timeout": 8000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Return-Format",
+              "value": "html"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "onError": "continueRegularOutput"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "88eff1fa-acc6-4f98-b30f-6c673f83a5ae",
+      "name": "ICP Scoring & Qualification Engine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const contents = $input.all();\nlet leads = [];\ntry {\n  leads = $('Evaluate Mail Server Status').all();\n} catch (e) {\n  leads = [];\n}\n\nconst franchiseRegex = /\\b(mcdonald'?s|starbucks|subway|domino'?s|kfc|pizza hut|hilton|marriott|regus|anytime fitness|supercuts|f45|wendy'?s|burger king|taco bell|holiday inn|best western|hampton inn|re\\/max|century 21|keller williams)\\b/i;\n\nfunction cleanBusinessName(rawName) {\n  if (!rawName) return '';\n  let name = rawName\n    .replace(/\\s*[-–|:]\\s*(Digital Marketing|Marketing Agency|Roofing|Financial|Advisory|Consulting|Real Estate|Law Firm|Accounting|Services|LLC|Inc).*/i, '')\n    .replace(/\\s*(,\\s*)?\\b(Inc\\.?|LLC\\.?|Ltd\\.?|L\\.L\\.C\\.?|Corp\\.?|Corporation|Co\\.?|Company|P\\.C\\.?|LLP\\.?|PLLC\\.?)\\b/gi, '')\n    .replace(/[,.\\-\\s]+$/, '')\n    .trim();\n  return name || rawName;\n}\n\nconst GENERIC_PREFIXES = [\n  'info', 'contact', 'support', 'sales', 'admin', 'hello', 'office', 'team',\n  'help', 'inquiries', 'enquiries', 'service', 'services', 'marketing', 'careers',\n  'jobs', 'billing', 'accounting', 'reception', 'hr', 'press', 'media', 'general',\n  'frontdesk', 'operations', 'dispatch', 'scheduling', 'estimates'\n];\n\nreturn contents.map((cItem, i) => {\n  let lead = {};\n  try {\n    lead = $('Evaluate Mail Server Status').itemMatching(i).json;\n  } catch (e) {\n    lead = leads[i]?.json || {};\n  }\n\n  const htmlContent = (cItem.json.data || '').toString();\n  const lowerHtml = htmlContent.toLowerCase();\n  const contentAvailable = htmlContent.length >= 80;\n  \n  const role = lead.va_role || 'Automation VA';\n  const reviewsCount = Number(lead.reviews_count || 0);\n  const rating = Number(lead.rating || 0);\n  const targetCity = lead.target_city || '';\n  const targetCategory = (lead.target_category || '').toLowerCase();\n  const rawBizName = lead.business_name || '';\n  const cleanName = cleanBusinessName(rawBizName);\n\n  // 1. Email extraction from HTML\n  let extractedEmail = '';\n  let emailType = 'none';\n  if (contentAvailable) {\n    const mailtoMatches = [...htmlContent.matchAll(/mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})/gi)].map(m => m[1].toLowerCase());\n    const plainMatches = [...htmlContent.matchAll(/\\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})\\b/gi)].map(m => m[1].toLowerCase());\n    const allEmails = [...new Set([...mailtoMatches, ...plainMatches])].filter(e => {\n      return !e.match(/\\.(png|jpg|jpeg|gif|svg|webp|css|js)$/i) &&\n             !e.includes('sentry') && !e.includes('wixpress') && !e.includes('example.com') && !e.includes('domain.com') && !e.includes('schema.org');\n    });\n\n    if (allEmails.length > 0) {\n      const domainMatches = allEmails.filter(e => lead.domain && e.endsWith('@' + lead.domain));\n      const directEmails = domainMatches.filter(e => {\n        const prefix = e.split('@')[0];\n        return !GENERIC_PREFIXES.some(p => prefix === p || prefix.startsWith(p + '.'));\n      });\n      const genericEmails = domainMatches.filter(e => {\n        const prefix = e.split('@')[0];\n        return GENERIC_PREFIXES.some(p => prefix === p || prefix.startsWith(p + '.'));\n      });\n\n      if (directEmails.length > 0) {\n        extractedEmail = directEmails[0];\n        emailType = 'direct';\n      } else if (genericEmails.length > 0) {\n        extractedEmail = genericEmails[0];\n        emailType = 'generic';\n      } else {\n        extractedEmail = allEmails[0];\n        emailType = 'external';\n      }\n    }\n  }\n\n  // 2. Feature detection with tightened regexes (no false positives on homeowner, footers, or search bars)\n  const hasBooking = contentAvailable && /calendly\\.com|cal\\.com|acuityscheduling\\.com|squareup\\.com\\/appointments|tidycal\\.com|book-online|schedule-appointment/i.test(lowerHtml);\n  const hasCRM = contentAvailable && /hubspot|activecampaign|salesforce|keap|infusionsoft|gohighlevel|leadpages|pipedrive|zoho/i.test(lowerHtml);\n  const hasAutomation = hasCRM || (contentAvailable && /zapier\\.com|make\\.com|integromat/i.test(lowerHtml));\n  \n  // Specific contact / intake form detector (rejects search forms and newsletter inputs)\n  const hasManualForm = contentAvailable && (\n    /(wpforms|gravityforms|formspree|ninja-forms|typeform\\.com|jotform\\.com|contact-form-7)/i.test(lowerHtml) ||\n    (/<form[^>]*>/i.test(lowerHtml) && /\\b(contact|inquiry|enquiry|get in touch|request a quote|free estimate|send message|submit)\\b/i.test(lowerHtml))\n  );\n  const manualIntake = hasManualForm && !hasCRM;\n  const hasSocial = contentAvailable && /instagram\\.com\\/|facebook\\.com\\/|linkedin\\.com\\/|youtube\\.com\\/|youtu\\.be\\/|tiktok\\.com\\//i.test(lowerHtml);\n  \n  // Active hiring phrases only (rejects static footer \"careers\" links)\n  const hasHiring = contentAvailable && /\\b(join our team|we are hiring|we're hiring|open positions|job openings|view openings|current opportunities|now hiring)\\b/i.test(lowerHtml);\n  const hasAdminHiring = hasHiring && /\\b(administrative assistant|admin assistant|executive assistant|office coordinator|office administrator|receptionist|office manager)\\b/i.test(lowerHtml);\n  \n  // Explicit leadership roles with word boundaries (rejects \"homeowner\", etc.)\n  const hasLeadership = contentAvailable && /\\b(founder|owner|co-owner|ceo|president|director|principal|managing partner)\\b/i.test(lowerHtml);\n  const hasTeam = contentAvailable && /\\b(our team|meet the team|leadership team|our staff)\\b/i.test(lowerHtml);\n\n  // 3. Category classification\n  const isAdvisory = /advisory|financial|wealth|consulting|accounting|law/i.test(targetCategory);\n  const isRealEstate = /real estate|property|realtor|broker/i.test(targetCategory);\n  const isAgency = !isRealEstate && /agency|marketing|digital|creative|seo|branding/i.test(targetCategory);\n  const isContractor = /roofing|contractor|construction|hvac|plumb/i.test(targetCategory);\n\n  // 4. Extract Multi-Angle Verified Signals Palette\n  const detectedSignals = [];\n\n  // Signal: High Review Scale\n  if (reviewsCount >= 100) {\n    const rounded = Math.floor(reviewsCount / 10) * 10;\n    detectedSignals.push({\n      key: 'review_scale',\n      label: 'Google Reviews Scale',\n      fact: `${cleanName} has earned over ${rounded} client reviews on Google across ${targetCity}.`\n    });\n  } else if (reviewsCount >= 20) {\n    detectedSignals.push({\n      key: 'review_volume',\n      label: 'Established Reviews Volume',\n      fact: `${cleanName} has built a solid base of ${reviewsCount}+ client reviews on Google in ${targetCity}.`\n    });\n  }\n\n  // Signal: Stellar Star Rating\n  if (rating >= 4.7 && reviewsCount >= 10) {\n    detectedSignals.push({\n      key: 'high_rating',\n      label: 'High Client Rating',\n      fact: `${cleanName} holds a ${rating}-star rating on Google across ${reviewsCount} client reviews.`\n    });\n  }\n\n  // Signal: Online Booking / Scheduling\n  if (hasBooking) {\n    let tool = 'an online scheduling calendar';\n    if (lowerHtml.includes('calendly.com')) tool = 'Calendly';\n    else if (lowerHtml.includes('cal.com')) tool = 'Cal.com';\n    else if (lowerHtml.includes('acuityscheduling.com')) tool = 'Acuity Scheduling';\n    else if (lowerHtml.includes('squareup.com/appointments')) tool = 'Square Appointments';\n    \n    detectedSignals.push({\n      key: 'booking_flow',\n      label: 'Online Consultation Scheduling',\n      fact: `Your website features direct online consultation scheduling via ${tool}.`\n    });\n  }\n\n  // Signal: Contact / Inquiry Form\n  if (hasManualForm) {\n    let formType = 'an online contact form';\n    if (lowerHtml.includes('typeform.com') || lowerHtml.includes('typeform')) formType = 'Typeform';\n    else if (lowerHtml.includes('jotform.com') || lowerHtml.includes('jotform')) formType = 'Jotform';\n    else if (lowerHtml.includes('gravityforms')) formType = 'Gravity Forms';\n    else if (lowerHtml.includes('wpforms')) formType = 'WPForms';\n    else if (lowerHtml.includes('hubspot')) formType = 'HubSpot intake form';\n\n    detectedSignals.push({\n      key: 'intake_form',\n      label: 'Inquiry Intake Portal',\n      fact: `Your website accepts new client inquiries through ${formType} in ${targetCity}.`\n    });\n  }\n\n  // Signal: Detected CRM / Marketing Stack\n  if (hasCRM) {\n    let crmName = 'a dedicated CRM';\n    if (lowerHtml.includes('hubspot')) crmName = 'HubSpot';\n    else if (lowerHtml.includes('activecampaign')) crmName = 'ActiveCampaign';\n    else if (lowerHtml.includes('salesforce')) crmName = 'Salesforce';\n    else if (lowerHtml.includes('gohighlevel')) crmName = 'GoHighLevel';\n    else if (lowerHtml.includes('pipedrive')) crmName = 'Pipedrive';\n    else if (lowerHtml.includes('zoho')) crmName = 'Zoho';\n\n    detectedSignals.push({\n      key: 'tech_crm',\n      label: 'Active CRM Platform',\n      fact: `Your website integrates with ${crmName} for client tracking.`\n    });\n  }\n\n  // Signal: Careers / Active Hiring\n  if (hasHiring) {\n    detectedSignals.push({\n      key: 'team_hiring',\n      label: 'Active Team Growth',\n      fact: `Your website features open job opportunities on your careers page in ${targetCity}.`\n    });\n  }\n\n  // Signal: Dedicated Leadership & Team\n  if (hasTeam || hasLeadership) {\n    detectedSignals.push({\n      key: 'established_team',\n      label: 'Dedicated Team Presence',\n      fact: `Your website highlights an established leadership and specialist team in ${targetCity}.`\n    });\n  }\n\n  // Signal: Specific Location Presence\n  if (lead.address && lead.address.length > 5) {\n    const street = lead.address.split(',')[0].trim();\n    if (street && street.length > 3) {\n      detectedSignals.push({\n        key: 'office_presence',\n        label: 'Local Office Presence',\n        fact: `${cleanName} operates out of your office at ${street} in ${targetCity}.`\n      });\n    }\n  }\n\n  // Fallback if fewer than 2 signals detected\n  if (detectedSignals.length < 2) {\n    detectedSignals.push({\n      key: 'local_presence',\n      label: 'Active Local Presence',\n      fact: `${cleanName} is actively serving clients across ${targetCity}.`\n    });\n  }\n\n  // Primary fallback signal\n  const primarySignal = detectedSignals[0] || { key: 'local_presence', fact: `${cleanName} is based in ${targetCity}.` };\n\n  // 5. Gate Checks\n  const gateFailures = [];\n  if (lead.business_status === 'CLOSED_PERMANENTLY' || lead.business_status === 'CLOSED_TEMPORARILY') {\n    gateFailures.push(`Business is ${lead.business_status}`);\n  }\n  // STRICT GATES:\n  // A. Contact email discovered\n  if (!extractedEmail || extractedEmail.trim() === '') {\n    gateFailures.push('No contact email discovered on website');\n  }\n  // B. Hard Gate on MX: Valid mail server required\n  if (!lead.has_mail_server) {\n    gateFailures.push('No Valid MX / Mail Server');\n  }\n\n  const sanityFloors = { 'General VA': 5, 'Executive VA': 40, 'Automation VA': 15, 'Social Media Manager (SMM)': 5 };\n  const minReviews = sanityFloors[role] || 10;\n  if (reviewsCount < minReviews) {\n    gateFailures.push(`Review count (${reviewsCount}) below role floor (${minReviews})`);\n  }\n  if (franchiseRegex.test(rawBizName) || (lead.domain && franchiseRegex.test(lead.domain)) || (contentAvailable && /franchise opportunities|own a franchise/i.test(lowerHtml))) {\n    gateFailures.push('National chain or franchise detected');\n  }\n\n  const isQualified = gateFailures.length === 0;\n\n  // 6. Shared Score (55 pts)\n  let ptsReviews = reviewsCount >= 30 && reviewsCount <= 150 ? 8 : (reviewsCount >= 15 ? 6 : (reviewsCount > 500 ? 2 : 4));\n  let ptsRating = rating >= 3.8 && rating <= 4.7 ? 6 : (rating > 4.7 && reviewsCount > 150 ? 3 : 2);\n  const ptsAge = 1.6;\n  const ptsSize = contentAvailable ? ((hasTeam || hasLeadership) ? 4.0 : 1.0) : 1.6;\n  const ptsPrice = 1.2;\n  const scoreFit = ptsReviews + ptsRating + ptsAge + ptsSize + ptsPrice;\n\n  let ptsEmail = emailType === 'direct' ? 8.0 : (emailType === 'generic' ? 4.0 : (emailType === 'external' ? 3.0 : 0.0));\n  const ptsDecisionMaker = contentAvailable ? (hasLeadership ? 6.0 : 1.0) : 2.4;\n  const ptsPhone = lead.phone ? 3.0 : 0.0;\n  const ptsWeb = contentAvailable ? 3.0 : 0.0;\n  const ptsMxTiebreaker = lead.has_mail_server ? 1.0 : 0.0;\n  const scoreReach = ptsEmail + ptsDecisionMaker + ptsPhone + ptsWeb + ptsMxTiebreaker;\n\n  let ptsHiring = contentAvailable ? (hasAdminHiring ? 5.0 : (hasHiring ? 3.0 : 0.0)) : 1.0;\n  let ptsReviewVel = reviewsCount >= 50 ? 3.0 : 1.5;\n  const scoreTiming = ptsHiring + ptsReviewVel;\n\n  // 7. Role-Specific Capability Gap (45 pts)\n  let scoreGap = 0;\n  let gapSignals = [];\n\n  if (role === 'Automation VA') {\n    if (hasCRM) { scoreGap += 12; gapSignals.push('detected CRM / automation platform'); }\n    else if (manualIntake) { scoreGap += 10; gapSignals.push('manual contact form with no connected CRM'); }\n    else if (hasBooking) { scoreGap += 8; gapSignals.push('booking calendar with potential triage gap'); }\n    else { scoreGap += 4; }\n\n    if (reviewsCount >= 50) { scoreGap += 11; gapSignals.push('high review volume creates review/follow-up bottleneck'); }\n    else if (reviewsCount >= 20) { scoreGap += 7; gapSignals.push('moderate review volume'); }\n    else { scoreGap += 3; }\n\n    if (hasHiring) { scoreGap += 11; gapSignals.push('active hiring implies workflow capacity constraints'); }\n    else { scoreGap += 3; }\n\n    if (isAdvisory || isContractor || isAgency) { scoreGap += 11; gapSignals.push(`high-fit automation industry (${targetCategory})`); }\n    else if (isRealEstate) { scoreGap += 9; gapSignals.push('real estate pipeline automation opportunity'); }\n    else { scoreGap += 4; }\n  } else if (role === 'Social Media Manager (SMM)') {\n    if (!hasSocial) { scoreGap += 14; gapSignals.push('zero social links detected on website'); }\n    else { scoreGap += 6; gapSignals.push('has existing social presence'); }\n\n    if (rating >= 4.5 && reviewsCount >= 20) { scoreGap += 12; gapSignals.push('stellar client reputation ready to repurpose into visual social proof'); }\n    else { scoreGap += 4; }\n\n    if (hasHiring) { scoreGap += 10; gapSignals.push('active team growth indicates marketing investment capacity'); }\n    else { scoreGap += 3; }\n\n    if (isAgency || isRealEstate) { scoreGap += 9; gapSignals.push(`niche matches visual social marketing (${targetCategory})`); }\n    else { scoreGap += 4; }\n  } else if (role === 'Executive VA') {\n    if (hasLeadership && (hasTeam || reviewsCount >= 30)) { scoreGap += 14; gapSignals.push('established leadership team with high administrative load'); }\n    else { scoreGap += 4; }\n\n    if (hasAdminHiring) { scoreGap += 12; gapSignals.push('actively hiring for administrative / operations support'); }\n    else if (hasHiring) { scoreGap += 6; }\n    else { scoreGap += 2; }\n\n    if (hasBooking) { scoreGap += 10; gapSignals.push('active consultation booking requires executive coordination'); }\n    else { scoreGap += 3; }\n\n    if (isAdvisory || isRealEstate || isAgency) { scoreGap += 9; gapSignals.push(`high-ticket client services (${targetCategory})`); }\n    else { scoreGap += 4; }\n  } else {\n    // General VA\n    if (manualIntake) { scoreGap += 12; gapSignals.push('manual intake workflow needing support'); }\n    else { scoreGap += 4; }\n    if (reviewsCount >= 20) { scoreGap += 11; gapSignals.push('steady customer traffic'); }\n    else { scoreGap += 4; }\n    if (lead.phone) { scoreGap += 11; gapSignals.push('inbound phone inquiries requiring triage'); }\n    else { scoreGap += 4; }\n    scoreGap += 11;\n  }\n\n  const rawScore = scoreFit + scoreReach + scoreTiming + scoreGap;\n  const icpScore = isQualified ? Math.round(rawScore) : 0;\n  const icpTier = icpScore >= 80 ? 'Tier A' : (icpScore >= 65 ? 'Tier B' : (icpScore >= 50 ? 'Tier C' : 'Disqualified'));\n\n  const breakdown = `[ICP: ${icpScore}/100 | ${icpTier} | Fit: ${Math.round(scoreFit)}/25 | Reach: ${Math.round(scoreReach)}/20 | Timing: ${Math.round(scoreTiming)}/10 | Gap: ${Math.round(scoreGap)}/45]`;\n\n  let suppressionReason = '';\n  if (!isQualified) {\n    suppressionReason = gateFailures.join('; ');\n  }\n\n  // External emails are routed to human review\n  const needsReview = (emailType === 'external');\n\n  return {\n    json: {\n      ...lead,\n      clean_business_name: cleanName,\n      extracted_email: extractedEmail,\n      email_type: emailType,\n      icp_score: icpScore,\n      icp_tier: icpTier,\n      icp_score_breakdown: breakdown,\n      gap_signals: gapSignals,\n      is_qualified: isQualified,\n      suppression_reason: suppressionReason,\n      needs_review: needsReview,\n      detected_signals: detectedSignals,\n      chosen_signal: primarySignal.key,\n      signal_fact: primarySignal.fact,\n      signal_label: primarySignal.label,\n      has_manual_form: hasManualForm,\n      has_booking: hasBooking,\n      has_crm: hasCRM,\n      has_hiring: hasHiring,\n      has_admin_hiring: hasAdminHiring,\n      has_leadership: hasLeadership,\n      has_team: hasTeam\n    }\n  };\n});"
+      }
+    },
+    {
+      "id": "e5b8d234-91ac-469b-8a5f-40e1f729e88a",
+      "name": "If: Is Lead Qualified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2940,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-qual",
+              "leftValue": "={{ $json.is_qualified }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "c-email",
+              "leftValue": "={{ $json.extracted_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "c-tier",
+              "leftValue": "={{ $json.icp_tier }}",
+              "rightValue": "Disqualified",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "d7114d85-5e6b-4ee2-b6fa-e39def2352b5",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3420,
+        320
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=BUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS DETECTED FOR THIS BUSINESS:\n{{ $json.signals_menu }}\n\nPROOF POINTS YOU CAN CHOOSE FROM:\n{{ $json.proof_options }}\n\nADJACENT WORKFLOWS SENTENCE TO INCLUDE IN PARAGRAPH 2:\n{{ $json.adjacent_steps }}\n\nOFFER / DUAL-PATH CTA TO USE IN PARAGRAPH 3:\n{{ $json.cta }}\n\nDecide which signal from the menu is the most powerful angle for this business, select the matching proof point, and write the sequence.",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You write cold emails for {{ $json.sender_name }}, {{ $json.title_with_article }} based in Manila.\nYou write articulate, thoughtful, and human cold emails. You are peer-to-peer and consultative, never robotic, desperate, or pushy.\nYou never invent facts. You write naturally with smooth sentence transitions.\n\nOUTPUT SPECIFICATION:\nReturn ONE JSON object with exactly these 8 keys:\nchosen_signal: the key of the signal you selected from the verified menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence)\nhook_evidence: the exact fact or observation text from the menu you used in Paragraph 1\nproof_used: the proof point text you selected and incorporated into Paragraph 2\nsubject: 3 to 8 word lowercase subject line\nemail_1: initial 3-paragraph outreach body (85 to 175 words)\nfollowup_1: Day 4 follow-up body (35 to 80 words)\nfollowup_2: Day 9 follow-up body (25 to 65 words)\nfollowup_3: Day 15 follow-up body (20 to 50 words)\n\nDo not include greetings, sign-offs, signatures, or footers in email_1 or followups. The system adds those automatically.\n\nHARD RULES:\n1. First person singular primarily: I, me, my. (You may say \"we can talk\" in the CTA).\n2. Introduce yourself ONLY as {{ $json.title_with_article }}. NEVER say \"solo virtual assistant\", \"virtual assistant\", \"VA\", or \"business workflow consultant\".\n3. No em dashes or en dashes. Use a comma or period instead.\n4. No exclamation marks. No emojis.\n5. Banned words: impressive, amazing, great, love, passionate, streamline, leverage, game-changer, cutting-edge, solutions, synergy, hope this finds, reaching out, touch base, just checking in, circle back, following up.\n6. Use the company's clean conversational name: {{ $json.clean_business_name }} (never use legal entity suffixes like Inc. or LLC).\n7. Subject: 3-8 words, all lowercase.\n8. Spelling: use {{ $json.spelling }}.\n\nHOW TO STRUCTURE email_1 (three paragraphs):\nParagraph 1 (The Context & Observation):\n  Select the single most compelling signal from the MENU OF VERIFIED SIGNALS.\n  Open naturally referencing {{ $json.clean_business_name }} in {{ $json.target_city }} and that verified fact.\n  Bridge logically into the operational friction point for their category ({{ $json.target_category }}).\n  Ask exactly one thoughtful operational question about how that process is currently handled.\n\nParagraph 2 (Who I Am, Specific Proof & Adjacent Breadth):\n  State who I am using my title ({{ $json.title_with_article }} based in Manila) and reword the chosen PROOF POINT in my voice.\n  Add breadth using this exact adjacent sentence: \"{{ $json.adjacent_steps }}\"\n  (Rule: Specific proof first, adjacent examples second. Never say \"and all other workflow automations\").\n\nParagraph 3 (The Dual-Path Free Working Sample Offer):\n  Use this exact offer concept:\n  \"{{ $json.cta }}\"\n\nSTRUCTURE OF FOLLOW-UPS:\nfollowup_1 (Day 4, 35-80 words): A concrete picture of what the free working sample would actually do for their tools. Remind them to just name 2-3 tools they use, or mention a different bottleneck if that fits better.\nfollowup_2 (Day 9, 25-65 words): A polite qualifying question asking if client intake is handled in-house by an operations manager, confirming the free small sample offer stands for whatever their top priority is.\nfollowup_3 (Day 15, 20-50 words): A warm, professional final note. No pressure, confirming the offer to build a small sample stands whenever priorities shift.\n\nVOICE GUIDELINES:\n{{ $json.voice_notes }}\n\nHIGH-QUALITY EXAMPLES:\n{{ $json.picked_samples }}"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "onError": "continueRegularOutput"
+      },
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 10000
+    },
+    {
+      "id": "5a49b231-60a1-42cb-b7b5-0c46fb1239aa",
+      "name": "NVIDIA Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3420,
+        520
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "nvidia/nemotron-3.5-bolt-e4b"
+        },
+        "options": {
+          "temperature": 0.25,
+          "maxTokens": 1500
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_ME",
+          "name": "NVIDIA Build account"
+        }
+      }
+    },
+    {
+      "id": "9c1a54b3-7649-4361-b442-7a4efb349001",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3420,
+        700
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_signal\": {\n      \"type\": \"string\",\n      \"description\": \"The key of the signal selected from the verified signals menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence, etc.)\"\n    },\n    \"hook_evidence\": {\n      \"type\": \"string\",\n      \"description\": \"The exact verified fact from the menu used in paragraph 1\"\n    },\n    \"proof_used\": {\n      \"type\": \"string\",\n      \"description\": \"The proof point selected and incorporated into paragraph 2\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"3 to 8 word lowercase subject line\"\n    },\n    \"email_1\": {\n      \"type\": \"string\",\n      \"description\": \"Initial 3-paragraph outreach email body (85 to 175 words)\"\n    },\n    \"followup_1\": {\n      \"type\": \"string\",\n      \"description\": \"Day 4 follow-up: concrete picture of offer (35 to 80 words)\"\n    },\n    \"followup_2\": {\n      \"type\": \"string\",\n      \"description\": \"Day 9 follow-up: in-house qualifying question (25 to 65 words)\"\n    },\n    \"followup_3\": {\n      \"type\": \"string\",\n      \"description\": \"Day 15 follow-up: polite close, no pressure (20 to 50 words)\"\n    }\n  },\n  \"required\": [\n    \"chosen_signal\",\n    \"hook_evidence\",\n    \"proof_used\",\n    \"subject\",\n    \"email_1\",\n    \"followup_1\",\n    \"followup_2\",\n    \"followup_3\"\n  ]\n}",
+        "autoFix": false,
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_signal\": {\n      \"type\": \"string\",\n      \"description\": \"The key of the signal selected from the verified signals menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence, etc.)\"\n    },\n    \"hook_evidence\": {\n      \"type\": \"string\",\n      \"description\": \"The exact verified fact from the menu used in paragraph 1\"\n    },\n    \"proof_used\": {\n      \"type\": \"string\",\n      \"description\": \"The proof point selected and incorporated into paragraph 2\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"3 to 8 word lowercase subject line\"\n    },\n    \"email_1\": {\n      \"type\": \"string\",\n      \"description\": \"Initial 3-paragraph outreach email body (85 to 175 words)\"\n    },\n    \"followup_1\": {\n      \"type\": \"string\",\n      \"description\": \"Day 4 follow-up: concrete picture of offer (35 to 80 words)\"\n    },\n    \"followup_2\": {\n      \"type\": \"string\",\n      \"description\": \"Day 9 follow-up: in-house qualifying question (25 to 65 words)\"\n    },\n    \"followup_3\": {\n      \"type\": \"string\",\n      \"description\": \"Day 15 follow-up: polite close, no pressure (20 to 50 words)\"\n    }\n  },\n  \"required\": [\n    \"chosen_signal\",\n    \"hook_evidence\",\n    \"proof_used\",\n    \"subject\",\n    \"email_1\",\n    \"followup_1\",\n    \"followup_2\",\n    \"followup_3\"\n  ]\n}"
+      }
+    },
+    {
+      "id": "32e4c090-b662-435a-9c0b-9846abe80f26",
+      "name": "Assemble Email & Sequences",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4860,
+        360
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item) => {\n  const data = item.json;\n  const draft = data.draft || {};\n  const bizName = data.clean_business_name || data.business_name || 'Business Partner';\n  const greeting = data.greeting || `Hi ${bizName} team,`;\n  const senderName = data.sender_name || 'Laurence Supangan';\n  const senderFirst = data.sender_first || 'Laurence';\n  const portfolioLink = data.portfolio_link || 'itslaurence.dev';\n  const physicalAddress = data.sender_physical_address || data.sender_location || '123 Business Way, Manila, 1000, Philippines';\n\n  // Format email_1\n  const email1Body = `${greeting}\\n\\n${draft.email_1}\\n\\n${senderName}\\n${portfolioLink}\\n${physicalAddress}\\nIf this isn't relevant, reply \"no\" and I won't email again.`;\n\n  // Format follow-ups\n  const f1Body = `${draft.followup_1}\\n\\n- ${senderFirst}`;\n  const f2Body = `${draft.followup_2}\\n\\n- ${senderFirst}`;\n  const f3Body = `${draft.followup_3}\\n\\n- ${senderFirst}`;\n\n  let reviewStatus = data.review_status || 'Ready to Send';\n  if (data.needs_review) {\n    reviewStatus = 'Review Required';\n  }\n\n  const hookEvidence = draft.hook_evidence || data.signal_fact || '';\n  const proofUsed = draft.proof_used || data.proof_point || '';\n\n  const notesWithScore = `${data.icp_score_breakdown || ''}\\n[Email: ${data.extracted_email || 'None found'} (${data.email_type || 'none'}) | Domain: ${data.domain || ''}]\\n[Chosen Signal: ${draft.chosen_signal || 'default'}]\\n\\nSubject: ${draft.subject}\\n\\n${email1Body}`;\n\n  return {\n    json: {\n      ...data,\n      business_name: bizName,\n      subject_line: draft.subject || `workflow note for ${(bizName).toLowerCase()}`,\n      email_1: email1Body,\n      followup_1: f1Body,\n      followup_2: f2Body,\n      followup_3: f3Body,\n      hook_evidence: hookEvidence,\n      proof_used: proofUsed,\n      review_status: reviewStatus,\n      assembled_email: email1Body,\n      airtable_notes: notesWithScore\n    }\n  };\n});"
+      }
+    },
+    {
+      "id": "008587de-52a1-447f-8105-9e85ef15de6e",
+      "name": "Log Company to CRM Table",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        5180,
+        360
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.business_name }}",
+            "Domain": "={{ $json.domain || '' }}",
+            "Email": "={{ $json.extracted_email || '' }}",
+            "Phone": "={{ $json.phone || '' }}",
+            "City": "={{ $json.target_city || '' }}",
+            "Category": "={{ $json.target_category || '' }}",
+            "Role": "={{ $json.va_role || 'Automation VA' }}",
+            "ICP Score": "={{ $json.icp_score || 0 }}",
+            "Tier": "={{ $json.icp_tier || 'Tier B' }}",
+            "Review Status": "={{ $json.review_status || 'Ready to Send' }}",
+            "Signals & Qualification": "={{ $json.icp_score_breakdown || '' }}",
+            "Place ID": "={{ $json.place_id || '' }}",
+            "Notes": "={{ $json.airtable_notes || '' }}",
+            "Send Priority": "={{ $json.send_priority }}"
+          },
+          "matchingColumns": [
+            "Domain"
+          ]
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "d3d0be7e-0001-447f-8105-9e85ef15de01",
+      "name": "Deduplicate Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.seenPlaceIds = staticData.seenPlaceIds || [];\nstaticData.seenDomains = staticData.seenDomains || [];\n\n// 1. Fetch active CRM domains from native Airtable search\nlet activeCrmDomains = new Set();\ntry {\n  const atItems = $('Fetch Existing CRM Domains').all();\n  for (const item of atItems) {\n    const r = item.json;\n    const d = (r.fields?.Domain || r.Domain || r.fields?.domain || r.domain || '').toLowerCase().trim();\n    if (d) activeCrmDomains.add(d);\n  }\n} catch (e) {}\n\n// 2. Fetch suppressed domains from native Airtable search\nlet suppressedDomains = new Set();\ntry {\n  const suppItems = $('Fetch Suppressed Domains').all();\n  for (const item of suppItems) {\n    const r = item.json;\n    const d = (r.fields?.Domain || r.Domain || r.fields?.domain || r.domain || '').toLowerCase().trim();\n    if (d) suppressedDomains.add(d);\n  }\n} catch (e) {}\n\nconst items = $input.all();\nconst freshItems = [];\nconst batchSeenDomains = new Set();\nconst batchSeenPlaceIds = new Set();\n\nfor (const item of items) {\n  const pId = (item.json.place_id || '').trim();\n  const rawDom = (item.json.domain || '').trim().toLowerCase();\n  \n  // A. Skip if domain already exists in active Companies CRM\n  if (rawDom && activeCrmDomains.has(rawDom)) continue;\n  \n  // B. Skip if domain is in Suppression List\n  if (rawDom && suppressedDomains.has(rawDom)) continue;\n  \n  // C. Skip intra-batch duplicates\n  if (rawDom && batchSeenDomains.has(rawDom)) continue;\n  if (pId && batchSeenPlaceIds.has(pId)) continue;\n  \n  // D. Skip duplicates recorded in workflow static data\n  const isSeenPlace = pId && staticData.seenPlaceIds.includes(pId);\n  const isSeenDomain = rawDom && staticData.seenDomains.includes(rawDom);\n  if (isSeenPlace || isSeenDomain) continue;\n  \n  if (pId) {\n    batchSeenPlaceIds.add(pId);\n    staticData.seenPlaceIds.push(pId);\n  }\n  if (rawDom) {\n    batchSeenDomains.add(rawDom);\n    staticData.seenDomains.push(rawDom);\n  }\n  freshItems.push(item);\n}\n\n// Keep static array bounded so it doesn't grow indefinitely\nif (staticData.seenPlaceIds.length > 5000) staticData.seenPlaceIds = staticData.seenPlaceIds.slice(-2500);\nif (staticData.seenDomains.length > 5000) staticData.seenDomains = staticData.seenDomains.slice(-2500);\n\nreturn freshItems;"
+      }
+    },
+    {
+      "id": "f0a1b2c3-0001-447f-8105-9e85ef15de11",
+      "name": "Prepare Writing Inputs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3160,
+        360
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForEachItem",
+        "jsCode": "const lead = $json;\nconst cfg = $('Config: VA Profile & Settings').first().json;\nconst city = lead.target_city || '';\nconst spelling = /UK|London|Manchester|Australia|Sydney|Melbourne|Brisbane/.test(city)\n  ? 'British/Australian (enquiries, organisation, centre)'\n  : /Canada|Toronto|Vancouver/.test(city) ? 'Canadian (organization, centre)'\n  : 'American (inquiries, organization, center)';\n\n// Title & Role\nconst professionalTitle = 'workflow automation specialist';\nconst article = 'a';\n\nlet proofs = [];\ntry { proofs = JSON.parse(cfg.proof_points || '[]'); } catch (e) { proofs = []; }\n\n// Match category and signal\nconst cat = (lead.target_category || '').toLowerCase();\nlet categoryKey = 'aaa';\nif (/roofing|contractor|construction|hvac|solar|plumb/i.test(cat)) categoryKey = 'contractor';\nelse if (/real estate|property|realtor|broker/i.test(cat)) categoryKey = 'realestate';\nelse if (/agency|marketing|digital|creative|seo|branding|web/i.test(cat)) categoryKey = 'agency';\nelse if (/law|legal|attorney/i.test(cat)) categoryKey = 'legal';\nelse if (/accounting|cpa|bookkeep/i.test(cat)) categoryKey = 'accounting';\nelse if (/wealth|financial|advis/i.test(cat)) categoryKey = 'wealth';\nelse if (/staffing|recruit/i.test(cat)) categoryKey = 'staffing';\n\nlet matchingPool = proofs.filter(p => p.categories && p.categories.includes(categoryKey));\n\n// Adjacent examples for Proof Paragraph\nlet adjacentSteps = 'The same setup works for lead intake, CRM updates, and scheduling handoffs.';\nlet focusArea = 'inquiry follow-up';\n\nif (categoryKey === 'contractor') {\n  adjacentSteps = 'The same setup works for service dispatching, quote follow-ups, and job-completion invoicing.';\n  focusArea = 'review follow-up';\n} else if (categoryKey === 'realestate') {\n  adjacentSteps = 'The same setup works for new portal inquiries, showing requests, and CRM status updates.';\n  focusArea = 'property inquiry routing';\n} else if (categoryKey === 'agency' || categoryKey === 'aaa') {\n  adjacentSteps = 'The same setup works for client onboarding, webhook handoffs, and project board creation.';\n  focusArea = 'client onboarding';\n} else if (categoryKey === 'legal' || categoryKey === 'accounting') {\n  adjacentSteps = 'The same setup works for document collection, intake form triage, and calendar scheduling.';\n  focusArea = 'consultation intake';\n}\n\nif (matchingPool.length === 0) matchingPool = proofs;\n\n// Format proofs for LLM menu\nconst proofOptionsFormatted = matchingPool.map((p, idx) => `[Option ${idx + 1}] ${p.text}`).join('\\n');\n\n// Format detected signals menu for LLM\nconst signals = lead.detected_signals || [];\nconst signalsMenuFormatted = signals.map((s, idx) => `${idx + 1}. [${s.key}] ${s.fact}`).join('\\n');\n\n// Claude-refined Dual-Path CTA\nconst refinedCta = `I'd be glad to map out and build a working sample of that for your setup for free, no call needed. If ${focusArea} isn't your main bottleneck, tell me what is and I'll build a small sample for that instead. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`;\n\nlet samples = [];\ntry { samples = JSON.parse(cfg.writing_samples || '[]'); } catch (e) { samples = []; }\nconst picked = samples.sort(() => Math.random() - 0.5).slice(0, 2).join('\\n---\\n');\n\nconst cleanName = lead.clean_business_name || lead.business_name || '';\n\nlet greeting = `Hi ${cleanName} team,`;\nif (cleanName && cleanName.split(' ').length > 3) {\n  greeting = 'Hi there,';\n}\n\nif (lead.extracted_email) {\n  const userPart = lead.extracted_email.split('@')[0].toLowerCase();\n  const genericPrefixes = [\n    'info', 'contact', 'support', 'sales', 'admin', 'hello', 'office', 'team',\n    'help', 'inquiries', 'enquiries', 'service', 'services', 'marketing', 'careers',\n    'jobs', 'billing', 'accounting', 'reception', 'hr', 'press', 'media', 'general',\n    'frontdesk', 'operations', 'dispatch', 'scheduling', 'estimates'\n  ];\n  if (!genericPrefixes.includes(userPart) && userPart.length > 2 && !userPart.includes('+')) {\n    const formatted = userPart.split('.')[0].replace(/[^a-zA-Z]/g, '');\n    if (formatted.length > 2) {\n      greeting = `Hi ${formatted.charAt(0).toUpperCase() + formatted.slice(1)},`;\n    }\n  }\n}\n\nreturn {\n  json: {\n    ...lead,\n    clean_business_name: cleanName,\n    professional_title: professionalTitle,\n    title_with_article: `${article} ${professionalTitle}`,\n    spelling,\n    signals_menu: signalsMenuFormatted,\n    proof_options: proofOptionsFormatted,\n    proof_point: matchingPool[0]?.text || '',\n    adjacent_steps: adjacentSteps,\n    focus_area: focusArea,\n    cta: refinedCta,\n    picked_samples: picked,\n    voice_notes: cfg.voice_notes || '',\n    greeting,\n    sender_first: (lead.sender_name || 'Laurence').split(' ')[0]\n  }\n};"
+      }
+    },
+    {
+      "id": "f0a1b2c3-0002-447f-8105-9e85ef15de12",
+      "name": "Validate Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3720,
+        320
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForEachItem",
+        "jsCode": "const out = $json.output || $json;\n\nlet lead = {};\ntry {\n  lead = $('Prepare Writing Inputs').itemMatching($itemIndex).json;\n} catch (e) {\n  const allLeads = $('Prepare Writing Inputs').all().map(i => i.json);\n  lead = allLeads[$itemIndex] || {};\n}\n\nconst errors = [];\nconst wc = s => (s || '').trim().split(/\\s+/).filter(Boolean).length;\n\nconst KEYS = ['subject','email_1','followup_1','followup_2','followup_3','chosen_signal','hook_evidence','proof_used'];\nKEYS.forEach(k => { if (typeof out[k] !== 'string' || !out[k].trim()) errors.push(`missing ${k}`); });\n\nif (!errors.length) {\n  // Validate that chosen_signal is in detected_signals\n  const detectedKeys = (lead.detected_signals || []).map(s => s.key);\n  if (detectedKeys.length > 0 && !detectedKeys.includes(out.chosen_signal)) {\n    errors.push(`chosen_signal \"${out.chosen_signal}\" is not in detected_signals: ${detectedKeys.join(', ')}`);\n  }\n\n  const LIMITS = { email_1:[70,185], followup_1:[30,85], followup_2:[20,70], followup_3:[15,55] };\n  for (const [k,[lo,hi]] of Object.entries(LIMITS)) {\n    const n = wc(out[k]);\n    if (n < lo || n > hi) errors.push(`${k} is ${n} words, must be ${lo}-${hi}`);\n  }\n  const sw = wc(out.subject);\n  if (sw < 3 || sw > 8) errors.push(`subject is ${sw} words, must be 3-8`);\n  if (out.subject !== out.subject.toLowerCase()) errors.push('subject must be lowercase');\n\n  const all = [out.subject, out.email_1, out.followup_1, out.followup_2, out.followup_3].join('\\n');\n  if (/[—–]/.test(all)) errors.push('contains em or en dash');\n  if (/!/.test(all)) errors.push('contains exclamation mark');\n  \n  const cleanedAll = all.replace(/\\bwe (can )?talk\\b/gi, '');\n  if (/\\b(our|ours)\\b/i.test(cleanedAll) || /\\bwe (are|have|build|help|work with)\\b/i.test(cleanedAll)) {\n    errors.push('uses agency language (our/we are)');\n  }\n  \n  if (/\\b(solo virtual assistant|virtual assistant|business workflow consultant)\\b/i.test(all)) {\n    errors.push('uses banned title (virtual assistant / business workflow consultant)');\n  }\n  \n  const BANNED = ['impressive','amazing','great','love','passionate','streamline','leverage',\n    'game-changer','cutting-edge','solutions','synergy','hope this finds','reaching out',\n    'touch base','just checking in','circle back','following up'];\n  BANNED.forEach(w => { if (all.toLowerCase().includes(w)) errors.push(`banned phrase: ${w}`); });\n\n  const q = (out.email_1.match(/\\?/g) || []).length;\n  if (q < 1 || q > 2) errors.push(`email_1 has ${q} question marks, needs 1 or 2`);\n  if (/^(hi|hello|hey|dear)\\b/i.test(out.email_1.trim())) errors.push('email_1 includes a greeting');\n  if (/\\n\\s*(best|regards|cheers|thanks|sincerely)\\b/i.test(out.email_1)) errors.push('email_1 includes a sign-off');\n}\n\nreturn { json: { ...lead, draft: out, valid: errors.length === 0, errors } };"
+      }
+    },
+    {
+      "id": "f0a1b2c3-0003-447f-8105-9e85ef15de13",
+      "name": "If: Is Draft Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3980,
+        320
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-valid",
+              "leftValue": "={{ $json.valid }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "f0a1b2c3-0004-447f-8105-9e85ef15de14",
+      "name": "Repair LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        4260,
+        500
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Your previous draft was rejected for these reasons: {{ $json.errors.join('; ') }}\nPrevious draft: {{ JSON.stringify($json.draft) }}\nRewrite it fixing only those problems. Same inputs, same rules, same JSON format.\nBUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS:\n{{ $json.signals_menu }}\n\nPROOF POINTS:\n{{ $json.proof_options }}\n\nOFFER / CTA:\n{{ $json.cta }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You write cold emails for {{ $json.sender_name }}, {{ $json.title_with_article }} based in Manila.\nYou write articulate, thoughtful, and human cold emails. You are peer-to-peer and consultative, never robotic, desperate, or pushy.\nYou never invent facts. You write naturally with smooth sentence transitions.\n\nOUTPUT SPECIFICATION:\nReturn ONE JSON object with exactly these 8 keys:\nchosen_signal: the key of the signal you selected from the verified menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence)\nhook_evidence: the exact fact or observation text from the menu you used in Paragraph 1\nproof_used: the proof point text you selected and incorporated into Paragraph 2\nsubject: 3 to 8 word lowercase subject line\nemail_1: initial 3-paragraph outreach body (85 to 175 words)\nfollowup_1: Day 4 follow-up body (35 to 80 words)\nfollowup_2: Day 9 follow-up body (25 to 65 words)\nfollowup_3: Day 15 follow-up body (20 to 50 words)\n\nDo not include greetings, sign-offs, signatures, or footers in email_1 or followups. The system adds those automatically.\n\nHARD RULES:\n1. First person singular primarily: I, me, my. (You may say \"we can talk\" in the CTA).\n2. Introduce yourself ONLY as {{ $json.title_with_article }}. NEVER say \"solo virtual assistant\", \"virtual assistant\", \"VA\", or \"business workflow consultant\".\n3. No em dashes or en dashes. Use a comma or period instead.\n4. No exclamation marks. No emojis.\n5. Banned words: impressive, amazing, great, love, passionate, streamline, leverage, game-changer, cutting-edge, solutions, synergy, hope this finds, reaching out, touch base, just checking in, circle back, following up.\n6. Use the company's clean conversational name: {{ $json.clean_business_name }} (never use legal entity suffixes like Inc. or LLC).\n7. Subject: 3-8 words, all lowercase.\n8. Spelling: use {{ $json.spelling }}.\n\nHOW TO STRUCTURE email_1 (three paragraphs):\nParagraph 1 (The Context & Observation):\n  Select the single most compelling signal from the MENU OF VERIFIED SIGNALS.\n  Open naturally referencing {{ $json.clean_business_name }} in {{ $json.target_city }} and that verified fact.\n  Bridge logically into the operational friction point for their category ({{ $json.target_category }}).\n  Ask exactly one thoughtful operational question about how that process is currently handled.\n\nParagraph 2 (Who I Am, Specific Proof & Adjacent Breadth):\n  State who I am using my title ({{ $json.title_with_article }} based in Manila) and reword the chosen PROOF POINT in my voice.\n  Add breadth using this exact adjacent sentence: \"{{ $json.adjacent_steps }}\"\n  (Rule: Specific proof first, adjacent examples second. Never say \"and all other workflow automations\").\n\nParagraph 3 (The Dual-Path Free Working Sample Offer):\n  Use this exact offer concept:\n  \"{{ $json.cta }}\"\n\nSTRUCTURE OF FOLLOW-UPS:\nfollowup_1 (Day 4, 35-80 words): A concrete picture of what the free working sample would actually do for their tools. Remind them to just name 2-3 tools they use, or mention a different bottleneck if that fits better.\nfollowup_2 (Day 9, 25-65 words): A polite qualifying question asking if client intake is handled in-house by an operations manager, confirming the free small sample offer stands for whatever their top priority is.\nfollowup_3 (Day 15, 20-50 words): A warm, professional final note. No pressure, confirming the offer to build a small sample stands whenever priorities shift.\n\nVOICE GUIDELINES:\n{{ $json.voice_notes }}\n\nHIGH-QUALITY EXAMPLES:\n{{ $json.picked_samples }}"
+            }
+          ]
+        }
+      },
+      "settings": {
+        "onError": "continueRegularOutput"
+      },
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 10000
+    },
+    {
+      "id": "f0a1b2c3-0005-447f-8105-9e85ef15de15",
+      "name": "NVIDIA Chat Model (Repair)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        4260,
+        700
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "nvidia/nemotron-3.5-bolt-e4b"
+        },
+        "options": {
+          "temperature": 0.25,
+          "maxTokens": 1500
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_ME",
+          "name": "NVIDIA Build account"
+        }
+      }
+    },
+    {
+      "id": "f0a1b2c3-0006-447f-8105-9e85ef15de16",
+      "name": "Structured Output Parser (Repair)",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4260,
+        880
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_signal\": {\n      \"type\": \"string\",\n      \"description\": \"The key of the signal selected from the verified signals menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence, etc.)\"\n    },\n    \"hook_evidence\": {\n      \"type\": \"string\",\n      \"description\": \"The exact verified fact from the menu used in paragraph 1\"\n    },\n    \"proof_used\": {\n      \"type\": \"string\",\n      \"description\": \"The proof point selected and incorporated into paragraph 2\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"3 to 8 word lowercase subject line\"\n    },\n    \"email_1\": {\n      \"type\": \"string\",\n      \"description\": \"Initial 3-paragraph outreach email body (85 to 175 words)\"\n    },\n    \"followup_1\": {\n      \"type\": \"string\",\n      \"description\": \"Day 4 follow-up: concrete picture of offer (35 to 80 words)\"\n    },\n    \"followup_2\": {\n      \"type\": \"string\",\n      \"description\": \"Day 9 follow-up: in-house qualifying question (25 to 65 words)\"\n    },\n    \"followup_3\": {\n      \"type\": \"string\",\n      \"description\": \"Day 15 follow-up: polite close, no pressure (20 to 50 words)\"\n    }\n  },\n  \"required\": [\n    \"chosen_signal\",\n    \"hook_evidence\",\n    \"proof_used\",\n    \"subject\",\n    \"email_1\",\n    \"followup_1\",\n    \"followup_2\",\n    \"followup_3\"\n  ]\n}",
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"chosen_signal\": {\n      \"type\": \"string\",\n      \"description\": \"The key of the signal selected from the verified signals menu (e.g. review_scale, high_rating, booking_flow, intake_form, tech_crm, team_hiring, office_presence, etc.)\"\n    },\n    \"hook_evidence\": {\n      \"type\": \"string\",\n      \"description\": \"The exact verified fact from the menu used in paragraph 1\"\n    },\n    \"proof_used\": {\n      \"type\": \"string\",\n      \"description\": \"The proof point selected and incorporated into paragraph 2\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"3 to 8 word lowercase subject line\"\n    },\n    \"email_1\": {\n      \"type\": \"string\",\n      \"description\": \"Initial 3-paragraph outreach email body (85 to 175 words)\"\n    },\n    \"followup_1\": {\n      \"type\": \"string\",\n      \"description\": \"Day 4 follow-up: concrete picture of offer (35 to 80 words)\"\n    },\n    \"followup_2\": {\n      \"type\": \"string\",\n      \"description\": \"Day 9 follow-up: in-house qualifying question (25 to 65 words)\"\n    },\n    \"followup_3\": {\n      \"type\": \"string\",\n      \"description\": \"Day 15 follow-up: polite close, no pressure (20 to 50 words)\"\n    }\n  },\n  \"required\": [\n    \"chosen_signal\",\n    \"hook_evidence\",\n    \"proof_used\",\n    \"subject\",\n    \"email_1\",\n    \"followup_1\",\n    \"followup_2\",\n    \"followup_3\"\n  ]\n}",
+        "autoFix": false
+      }
+    },
+    {
+      "id": "f0a1b2c3-0007-447f-8105-9e85ef15de17",
+      "name": "Validate Repaired Draft",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4560,
+        500
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForEachItem",
+        "jsCode": "const out = $json.output || $json;\n\nlet lead = {};\ntry {\n  lead = $('Prepare Writing Inputs').itemMatching($itemIndex).json;\n} catch (e) {\n  try {\n    lead = $('If: Is Draft Valid?').itemMatching($itemIndex).json;\n  } catch (e2) {\n    const allLeads = $('Prepare Writing Inputs').all().map(i => i.json);\n    const matched = allLeads.find(l => \n      (out.subject || '').toLowerCase().includes((l.clean_business_name || l.business_name || '').toLowerCase()) || \n      (out.email_1 || '').toLowerCase().includes((l.clean_business_name || l.business_name || '').toLowerCase())\n    );\n    lead = matched || allLeads[$itemIndex] || {};\n  }\n}\n\nconst errors = [];\nconst wc = s => (s || '').trim().split(/\\s+/).filter(Boolean).length;\n\nconst KEYS = ['subject','email_1','followup_1','followup_2','followup_3','chosen_signal','hook_evidence','proof_used'];\nKEYS.forEach(k => { if (typeof out[k] !== 'string' || !out[k].trim()) errors.push(`missing ${k}`); });\n\nif (!errors.length) {\n  const LIMITS = { email_1:[70,185], followup_1:[30,85], followup_2:[20,70], followup_3:[18,55] };\n  for (const [k,[lo,hi]] of Object.entries(LIMITS)) {\n    const n = wc(out[k]);\n    if (n < lo || n > hi) errors.push(`${k} is ${n} words, must be ${lo}-${hi}`);\n  }\n  const sw = wc(out.subject);\n  if (sw < 3 || sw > 8) errors.push(`subject is ${sw} words, must be 3-8`);\n  if (out.subject !== out.subject.toLowerCase()) errors.push('subject must be lowercase');\n\n  const all = [out.subject, out.email_1, out.followup_1, out.followup_2, out.followup_3].join('\\n');\n  if (/[—–]/.test(all)) errors.push('contains em or en dash');\n  if (/!/.test(all)) errors.push('contains exclamation mark');\n\n  const cleanedAll = all.replace(/\\bwe (can )?talk\\b/gi, '');\n  if (/\\b(our|ours)\\b/i.test(cleanedAll) || /\\bwe (are|have|build|help|work with)\\b/i.test(cleanedAll)) {\n    errors.push('uses agency language (our/we are)');\n  }\n  \n  if (/\\b(solo virtual assistant|virtual assistant|business workflow consultant)\\b/i.test(all)) {\n    errors.push('uses banned title (virtual assistant / business workflow consultant)');\n  }\n\n  const BANNED = ['impressive','amazing','great','love','passionate','streamline','leverage',\n    'game-changer','cutting-edge','solutions','synergy','hope this finds','reaching out',\n    'touch base','just checking in','circle back','following up'];\n  BANNED.forEach(w => { if (all.toLowerCase().includes(w)) errors.push(`banned phrase: ${w}`); });\n\n  const q = (out.email_1.match(/\\?/g) || []).length;\n  if (q < 1 || q > 2) errors.push(`email_1 has ${q} question marks, needs 1 or 2`);\n  if (/^(hi|hello|hey|dear)\\b/i.test(out.email_1.trim())) errors.push('email_1 includes a greeting');\n  if (/\\n\\s*(best|regards|cheers|thanks|sincerely)\\b/i.test(out.email_1)) errors.push('email_1 includes a sign-off');\n}\n\nlet finalDraft = out;\nlet needsReview = false;\n\nif (errors.length > 0) {\n  needsReview = true;\n  const biz = lead.clean_business_name || lead.business_name || 'your team';\n  finalDraft = {\n    chosen_signal: lead.signal_type || 'local_presence',\n    hook_evidence: lead.signal_fact || `${biz} is based in ${lead.target_city || 'your area'}.`,\n    proof_used: lead.proof_point || 'built back-office automations in n8n that eliminate manual data entry between forms, CRMs, and team communication tools',\n    subject: `workflow note for ${(biz).toLowerCase()}`,\n    email_1: `I was looking into ${biz} in ${lead.target_city || 'your area'} and noticed your strong presence on Google. With professional teams handling steady inbound inquiries, I was curious: how does your staff currently manage the handoff between new client inquiries and scheduling consultations?\\n\\nI'm ${lead.sender_first || 'Laurence'}, an ${lead.professional_title || 'automation specialist'} based in Manila. I build custom n8n workflows that eliminate repetitive admin around intake triage, calendar bookings, and CRM updates.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`,\n    followup_1: `One quick note on this: the sample pipeline I map out connects your intake forms directly into your CRM and alerts your team without manual data entry.\\n\\nJust drop the names of 2 or 3 tools your team uses, and I will build the working demo for you.`,\n    followup_2: `Quick question on this: is client intake and calendar scheduling something your operations manager already has completely handled in-house?\\n\\nIf that process is already covered smoothly on your end, just let me know and I will gladly drop it. If not, the free working sample offer still stands.`,\n    followup_3: `Final note from me on this. If the timing is not right or your team is focused on other priorities, no worries at all.\\n\\nIf you ever want to eliminate manual handoffs between your forms, CRM, and calendars in the future, the offer stands.`\n  };\n}\n\nreturn { json: { ...lead, draft: finalDraft, valid: errors.length === 0, needs_review: needsReview, repair_errors: errors } };"
+      }
+    },
+    {
+      "id": "b1c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e",
+      "name": "Fetch Existing CRM Domains",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        400
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "executeOnce": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "c2d3e4f5-a6b7-4c8d-9e0f-1a2b3c4d5e6f",
+      "name": "Fetch Suppressed Domains",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        400
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "executeOnce": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "d3e4f5a6-b7c8-4d9e-0f1a-2b3c4d5e6f7a",
+      "name": "Log Sequence to Outreach Drafts",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        5440,
+        360
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Domain"
+          ],
+          "value": {
+            "Draft Title": "={{ $('Calculate Send Priority').item.json.business_name }} - 4-Step Outreach Sequence",
+            "Domain": "={{ $('Calculate Send Priority').item.json.domain }}",
+            "Subject": "={{ $('Calculate Send Priority').item.json.subject_line }}",
+            "email_1": "={{ $('Calculate Send Priority').item.json.email_1 }}",
+            "followup_1": "={{ $('Calculate Send Priority').item.json.followup_1 }}",
+            "followup_2": "={{ $('Calculate Send Priority').item.json.followup_2 }}",
+            "followup_3": "={{ $('Calculate Send Priority').item.json.followup_3 }}",
+            "hook_evidence": "={{ $('Calculate Send Priority').item.json.hook_evidence }}",
+            "proof_used": "={{ $('Calculate Send Priority').item.json.proof_used }}",
+            "Review Status": "={{ $('Calculate Send Priority').item.json.review_status }}",
+            "Company": "={{ [$json.id] }}",
+            "Send Priority": "={{ $('Calculate Send Priority').item.json.send_priority }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "e4f5a6b7-c8d9-4e0f-1a2b-3c4d5e6f7a8b",
+      "name": "Log to Suppression List",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        3160,
+        600
+      ],
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Domain"
+          ],
+          "value": {
+            "Domain": "={{ $json.domain || $json.website || $json.business_name }}",
+            "Company Name": "={{ $json.business_name }}",
+            "Reason": "={{ $json.suppression_reason || 'No Contact Email Found' }}",
+            "City": "={{ $json.target_city || '' }}",
+            "Category": "={{ $json.target_category || '' }}",
+            "Notes": "={{ $json.icp_score_breakdown || 'Automatically suppressed during qualification.' }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Calculate Send Priority",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5020,
+        360
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\n\nconst HOOK = {\n  booking_flow: 20,\n  intake_form: 18,\n  tech_crm: 16,\n  team_hiring: 14,\n  high_rating: 8,\n  review_scale: 8,\n  review_volume: 6,\n  established_team: 4,\n  office_presence: 4,\n  local_presence: 0\n};\n\nreturn items.map(item => {\n  const d = item.json;\n  const draft = d.draft || {};\n  const chosen = draft.chosen_signal || d.chosen_signal || d.signal_type || 'local_presence';\n\n  let p = (d.icp_score || 0) * 0.35; // fit, 0-35\n  const emailScores = { direct: 20, generic: 8, external: 2 };\n  p += emailScores[d.email_type] ?? 8;\n  p += HOOK[chosen] ?? 0;\n  p += (d.has_mail_server || d.mx_valid) ? 5 : 0;\n\n  if (d.needs_review || d.review_status === 'Review Required') p -= 25;\n  if (/Canada|Australia/i.test(d.target_city || '')) p -= 15;\n  if ((Number(d.reviews_count) || 0) > 500) p -= 10;\n\n  const sendPriority = Math.max(0, Math.min(100, Math.round(p)));\n\n  return {\n    json: {\n      ...d,\n      send_priority: sendPriority\n    }\n  };\n});"
+      }
+    },
+    {
+      "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+      "name": "Check Daily Draft Cap & Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        360
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst today = new Date().toISOString().slice(0, 10);\nif (staticData.draftDate !== today) {\n  staticData.draftDate = today;\n  staticData.draftsToday = 0;\n}\n\nconst items = $input.all();\nconst out = [];\n\nfor (const item of items) {\n  const lead = item.json;\n  const score = Number(lead.icp_score || 0);\n  const isTierAorB = score >= 65; // Tier A (80+) or Tier B (65-79)\n  const underCap = (staticData.draftsToday || 0) < 25;\n\n  if (isTierAorB && underCap) {\n    staticData.draftsToday = (staticData.draftsToday || 0) + 1;\n    out.push({\n      json: {\n        ...lead,\n        should_draft: true,\n        daily_draft_number: staticData.draftsToday\n      }\n    });\n  } else {\n    const reason = !isTierAorB ? 'Score below Tier B floor (<65)' : 'Daily LLM draft cap (25) reached';\n    out.push({\n      json: {\n        ...lead,\n        should_draft: false,\n        review_status: 'Backlog / Unassigned',\n        backlog_reason: reason\n      }\n    });\n  }\n}\n\nreturn out;"
+      }
+    },
+    {
+      "id": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+      "name": "If: Should Draft with LLM?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3560,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-should-draft",
+              "leftValue": "={{ $json.should_draft }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "e7f8a9b0-c1d2-4e3f-9a0b-1c2d3e4f5a6b",
+      "name": "Send Discord Approval Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5700,
+        360
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Config: VA Profile & Settings').first().json.discord_webhook_url || 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  username: 'Outreach Engine',\n  avatar_url: 'https://cdn-icons-png.flaticon.com/512/4712/4712109.png',\n  embeds: [\n    {\n      title: '🎯 Draft Ready: ' + ($('Calculate Send Priority').item.json.business_name || 'Business Partner'),\n      description: '**Subject:** `' + $('Calculate Send Priority').item.json.subject_line + '`\\n\\n**Email Preview:**\\n```text\\n' + $('Calculate Send Priority').item.json.email_1.slice(0, 750) + '...\\n```\\n\\n👉 **[✅ Approve & Queue](https://YOUR-N8N-HOST/webhook/review-lead?id=' + $json.id + '&action=approve)** • **[❌ Reject & Suppress](https://YOUR-N8N-HOST/webhook/review-lead?id=' + $json.id + '&action=reject)**',\n      color: 3066993,\n      fields: [\n        { name: 'Priority Score', value: '**' + $('Calculate Send Priority').item.json.send_priority + '/100**', inline: true },\n        { name: 'ICP Tier', value: $('Calculate Send Priority').item.json.icp_tier + ' (' + $('Calculate Send Priority').item.json.icp_score + ' pts)', inline: true },\n        { name: 'Target City', value: $('Calculate Send Priority').item.json.target_city, inline: true },\n        { name: 'Recipient Email', value: '`' + $('Calculate Send Priority').item.json.extracted_email + '` (' + $('Calculate Send Priority').item.json.email_type + ')', inline: true },\n        { name: 'Category', value: $('Calculate Send Priority').item.json.target_category, inline: true },\n        { name: 'Status', value: $('Calculate Send Priority').item.json.review_status, inline: true },\n        { name: 'Verified Hook', value: $('Calculate Send Priority').item.json.hook_evidence || 'Standard Signal', inline: false }\n      ],\n      footer: {\n        text: 'Outreach Engine • Click a link above to take action'\n      },\n      timestamp: new Date().toISOString()\n    }\n  ]\n}) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Config: VA Profile & Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 20 Mins": {
+      "main": [
+        [
+          {
+            "node": "Config: VA Profile & Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config: VA Profile & Settings": {
+      "main": [
+        [
+          {
+            "node": "Fetch Existing CRM Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto City & Niche Rotator": {
+      "main": [
+        [
+          {
+            "node": "Live Google Maps Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live Google Maps Scraper": {
+      "main": [
+        [
+          {
+            "node": "Extract Business & Domain Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Business & Domain Info": {
+      "main": [
+        [
+          {
+            "node": "Deduplicate Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DNS MX Lookup (Google DoH)": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Mail Server Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Mail Server Status": {
+      "main": [
+        [
+          {
+            "node": "Fetch Website Signals (Jina)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Website Signals (Jina)": {
+      "main": [
+        [
+          {
+            "node": "ICP Scoring & Qualification Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ICP Scoring & Qualification Engine": {
+      "main": [
+        [
+          {
+            "node": "If: Is Lead Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Is Lead Qualified?": {
+      "main": [
+        [
+          {
+            "node": "Check Daily Draft Cap & Score",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NVIDIA Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Validate Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicate Leads": {
+      "main": [
+        [
+          {
+            "node": "Filter: Has Contact Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Has Contact Path": {
+      "main": [
+        [
+          {
+            "node": "DNS MX Lookup (Google DoH)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Writing Inputs": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Draft": {
+      "main": [
+        [
+          {
+            "node": "If: Is Draft Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Is Draft Valid?": {
+      "main": [
+        [
+          {
+            "node": "Assemble Email & Sequences",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Repair LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NVIDIA Chat Model (Repair)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Repair LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser (Repair)": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Repair LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repair LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Validate Repaired Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Repaired Draft": {
+      "main": [
+        [
+          {
+            "node": "Assemble Email & Sequences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Email & Sequences": {
+      "main": [
+        [
+          {
+            "node": "Calculate Send Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Existing CRM Domains": {
+      "main": [
+        [
+          {
+            "node": "Fetch Suppressed Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Suppressed Domains": {
+      "main": [
+        [
+          {
+            "node": "Auto City & Niche Rotator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Company to CRM Table": {
+      "main": [
+        [
+          {
+            "node": "Log Sequence to Outreach Drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Send Priority": {
+      "main": [
+        [
+          {
+            "node": "Log Company to CRM Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Daily Draft Cap & Score": {
+      "main": [
+        [
+          {
+            "node": "If: Should Draft with LLM?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Should Draft with LLM?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Writing Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Company to CRM Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Sequence to Outreach Drafts": {
+      "main": [
+        [
+          {
+            "node": "Send Discord Approval Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "active": false
+}
