@@ -36,7 +36,7 @@ A good prospecting system has to do four things most "AI outreach" tools skip: *
 
 ```mermaid
 flowchart TD
-  A["Every 20 min"] --> B["Rotator: next city and niche<br/>12 US cities, 4 niche groups"]
+  A["Every 20 min"] --> B["Rotator: next city and niche<br/>12 US cities, role-specific niche lists"]
   B --> C["Self-hosted Playwright / FastAPI Maps scraper<br/>skips already-scraped place IDs"]
   C --> D["Extract business and domain"]
   D --> E{"Website domain?"}
@@ -131,7 +131,7 @@ Sending is where the safety work concentrates. Both the dispatcher and the seque
 - read a **shared kill switch** and **fail closed**: unreachable or paused means nothing sends;
 - stop at a **shared daily cap** of 10 across first touches and follow-ups (the dispatcher also keeps its own cap of 6 first touches);
 - re-check the **suppression list** by domain, so an opt-out recorded after drafting still wins;
-- send only inside **local office hours** (Monday to Friday, 09:00 to 17:00) for the recipient's time zone across the US, UK, Canada and Australia;
+- send only inside **local office hours** (Monday to Friday, 09:00 to 17:00) for the recipient's own time zone (simulated across 10 time zones);
 - lock the draft before sending and **restore it if the send fails**, so a failed touch retries on the next cycle instead of being lost.
 
 The sequencer also excludes leads that have replied, opted out or bounced *before* it picks the next candidates, so a stopped lead can never block the queue.
@@ -193,7 +193,7 @@ I tested the engine on synthetic data with a self-hosted open-weight model, so t
 
 ### Lead engine: 100 runs, 300 synthetic leads
 
-Leads covered 16 cities across four countries and 13 niches, including no-website, social-only, franchise, closed-business, duplicate, already-suppressed, bad-mailbox and low-review cases.
+Leads were spread across 16 cities in four countries (to exercise time-zone handling) and 13 niches, including no-website, social-only, franchise, closed-business, duplicate, already-suppressed, bad-mailbox and low-review cases.
 
 | Check | Result |
 |---|---|
