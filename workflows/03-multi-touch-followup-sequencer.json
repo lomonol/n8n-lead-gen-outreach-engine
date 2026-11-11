@@ -47,13 +47,26 @@
       ],
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.is_paused }}",
-              "value2": false
+              "id": "c-engine-active",
+              "leftValue": "={{ $json.is_paused }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
     },
     {
@@ -86,7 +99,8 @@
           "id": "REPLACE_ME",
           "name": "Airtable Personal Access Token account"
         }
-      }
+      },
+      "executeOnce": true
     },
     {
       "id": "wf4-eval-cadence",
@@ -99,7 +113,7 @@
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst now = new Date();\nconst candidates = [];\n\nfor (const item of items) {\n  const fields = item.json.fields || item.json;\n  const draftId = item.json.id;\n  const draftTitle = fields['Draft Title'] || '';\n  const sentAtStr = fields['Sent At'];\n  if (!sentAtStr) continue;\n\n  const sentAt = new Date(sentAtStr);\n  const diffMs = now.getTime() - sentAt.getTime();\n  const diffDays = diffMs / (1000 * 60 * 60 * 24);\n\n  let nextTouch = null;\n  let bodyField = null;\n  let newTitleTag = '';\n\n  if (!draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 4.0 && fields['followup_1']) {\n      nextTouch = 2;\n      bodyField = 'followup_1';\n      newTitleTag = '[Touch 2 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 5.0 && fields['followup_2']) {\n      nextTouch = 3;\n      bodyField = 'followup_2';\n      newTitleTag = '[Touch 3 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 6.0 && fields['followup_3']) {\n      nextTouch = 4;\n      bodyField = 'followup_3';\n      newTitleTag = '[Sequence Completed]';\n    }\n  }\n\n  const companyRecId = (fields.Company && fields.Company.length) ? fields.Company[0] : null;\n  if (nextTouch && companyRecId) {\n    candidates.push({\n      draft_id: draftId,\n      company_record_id: companyRecId,\n      draft_title: draftTitle,\n      new_title_tag: newTitleTag,\n      original_subject: fields.Subject || '',\n      followup_body: fields[bodyField] || '',\n      next_touch: nextTouch,\n      touch_label: `Touch ${nextTouch}/4`,\n      days_since_last_send: Math.round(diffDays * 10) / 10\n    });\n  }\n}\n\nif (candidates.length === 0) return [];\n// Sort candidates by longest waiting time\ncandidates.sort((a, b) => b.days_since_last_send - a.days_since_last_send);\n\n// Pass up to 5 candidates for office-hour evaluation\nreturn candidates.slice(0, 5).map(c => ({ json: c }));"
+        "jsCode": "const items = $input.all();\nif (!items.length) return [];\n\nconst now = new Date();\nconst candidates = [];\n\n// Leads whose sequence already stopped (replied, rejected, opted out, bounced) must be excluded BEFORE the top-N cut,\n// otherwise their drafts (still 'Sent') stay at the head of the queue forever and block every follow-up.\nconst stoppedIds = new Set();\nconst stoppedDomains = new Set();\ntry {\n  for (const it of $('Fetch Stopped Leads').all()) {\n    if (it.json && it.json.id) stoppedIds.add(it.json.id);\n    const d = String((it.json && (it.json.fields || it.json).Domain) || '').toLowerCase().trim();\n    if (d) stoppedDomains.add(d);\n  }\n} catch (e) {}\ntry {\n  for (const d of ($('Collapse Safety Lists').first().json.suppressed_domains || [])) stoppedDomains.add(d);\n} catch (e) {}\n\nfor (const item of items) {\n  const fields = item.json.fields || item.json;\n  const draftId = item.json.id;\n  const draftTitle = fields['Draft Title'] || '';\n  const sentAtStr = fields['Sent At'];\n  if (!sentAtStr) continue;\n\n  const sentAt = new Date(sentAtStr);\n  const diffMs = now.getTime() - sentAt.getTime();\n  const diffDays = diffMs / (1000 * 60 * 60 * 24);\n\n  let nextTouch = null;\n  let bodyField = null;\n  let newTitleTag = '';\n\n  if (!draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 4.0 && fields['followup_1']) {\n      nextTouch = 2;\n      bodyField = 'followup_1';\n      newTitleTag = '[Touch 2 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 2 Sent]') && !draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 5.0 && fields['followup_2']) {\n      nextTouch = 3;\n      bodyField = 'followup_2';\n      newTitleTag = '[Touch 3 Sent]';\n    }\n  } else if (draftTitle.includes('[Touch 3 Sent]') && !draftTitle.includes('[Sequence Completed]')) {\n    if (diffDays >= 6.0 && fields['followup_3']) {\n      nextTouch = 4;\n      bodyField = 'followup_3';\n      newTitleTag = '[Sequence Completed]';\n    }\n  }\n\n  const companyRecId = (fields.Company && fields.Company.length) ? fields.Company[0] : null;\n  const draftDomain = String(fields['Domain'] || '').toLowerCase().trim();\n  if (companyRecId && stoppedIds.has(companyRecId)) continue;\n  if (draftDomain && stoppedDomains.has(draftDomain)) continue;\n  if (nextTouch && companyRecId) {\n    candidates.push({\n      draft_id: draftId,\n      company_record_id: companyRecId,\n      draft_title: draftTitle,\n      original_sent_at: sentAtStr,\n      new_title_tag: newTitleTag,\n      original_subject: fields.Subject || '',\n      followup_body: fields[bodyField] || '',\n      next_touch: nextTouch,\n      touch_label: `Touch ${nextTouch}/4`,\n      days_since_last_send: Math.round(diffDays * 10) / 10\n    });\n  }\n}\n\nif (candidates.length === 0) return [];\n// Sort candidates by longest waiting time\ncandidates.sort((a, b) => b.days_since_last_send - a.days_since_last_send);\n\n// Pass up to 30 candidates for office-hour evaluation (was 5). Stopped leads are already excluded above; the wider window also\n// keeps follow-ups flowing when the oldest due drafts belong to leads currently outside their local office hours.\nreturn candidates.slice(0, 30).map(c => ({ json: c }));\n"
       }
     },
     {
@@ -144,7 +158,7 @@
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const companyItems = $input.all();\nconst candidateItems = $('Evaluate Cadence & Touch Due').all();\n\nfunction resolveTimezone(cityStr) {\n  const city = (cityStr || '').trim();\n  if (/\\b(NY|FL|GA|NC|PA|OH|VA|MA|DC|NJ|MI|MD|SC)\\b/i.test(city) || /new york|miami|atlanta|tampa|orlando|charlotte|boston|philadelphia|detroit/i.test(city)) {\n    return 'America/New_York';\n  } else if (/\\b(CA|WA|OR|NV)\\b/i.test(city) || /los angeles|san francisco|san diego|seattle|portland|las vegas|sacramento|san jose/i.test(city)) {\n    return 'America/Los_Angeles';\n  } else if (/\\b(CO|AZ|UT|NM)\\b/i.test(city) || /denver|phoenix|salt lake|albuquerque/i.test(city)) {\n    return 'America/Denver';\n  }\n  return 'America/Chicago';\n}\n\nfunction checkOfficeHours(tz) {\n  const formatter = new Intl.DateTimeFormat('en-US', {\n    timeZone: tz,\n    hour: 'numeric',\n    weekday: 'short',\n    hourCycle: 'h23'\n  });\n  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));\n  const localHour = parseInt(parts.hour, 10);\n  const localWeekday = parts.weekday;\n  const isOfficeHours = !['Sat', 'Sun'].includes(localWeekday) && localHour >= 9 && localHour < 17;\n  return { isOfficeHours, localHour, localWeekday };\n}\n\nconst companiesById = {};\nfor (const ci of companyItems) {\n  if (ci.json && ci.json.id) {\n    companiesById[ci.json.id] = ci.json;\n  }\n}\n\nconst senderFull = 'Laurence Emmanuel Supangan';\nconst role = 'Workflow Automation Specialist';\nconst portfolio = 'portfolio.itslaurence.dev';\nconst address = '38 San Jose St., Brgy. San Antonio, Quezon City, Metro Manila 1105, Philippines';\n\nfor (let i = 0; i < candidateItems.length; i++) {\n  const candidate = candidateItems[i].json;\n  const cRecord = companiesById[candidate.company_record_id];\n  const company = (cRecord && (cRecord.fields || cRecord)) || {};\n  const companyId = cRecord ? cRecord.id : candidate.company_record_id;\n\n  // Skip replied or rejected leads\n  const revStatus = (company['Review Status'] || '').toLowerCase();\n  // Only leads in good standing whose initial outreach was 'Sent' are eligible for follow-ups\n  if (revStatus !== 'sent') {\n    continue;\n  }\n\n  // Validate email\n  const rawEmail = company['Email'] || '';\n  const emailMatch = rawEmail.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})/);\n  if (!emailMatch) {\n    continue;\n  }\n  const toEmail = emailMatch[1].toLowerCase();\n\n  // Office hours check\n  const targetTz = resolveTimezone(company['City']);\n  const { isOfficeHours, localHour, localWeekday } = checkOfficeHours(targetTz);\n\n  if (isOfficeHours) {\n    // Non-deceptive, professional follow-up subject line\n    const rawSub = candidate.original_subject || 'workflow automation inquiry';\n    const cleanSub = rawSub.replace(/^re:\\s*/i, '').replace(/^follow-up:\\s*/i, '').trim();\n    // Maintain exact original subject line so Gmail & Outlook natively thread follow-ups\n    const threadSubject = cleanSub;\n\n    // Clean single sign-off\n    const cleanBodyText = candidate.followup_body.replace(/\\s*-\\s*Laurence.*$/is, '').trim();\n    const emailBody = `${cleanBodyText}\n\nLaurence\n${portfolio}\n${address}\nIf this isn't relevant, reply \"no\" and I won't email again.`;\n\n    const baseTitle = candidate.draft_title.replace(/\\s*\\[Touch \\d Sent\\]|\\s*\\[Sequence Completed\\]/g, '').trim();\n    const updatedDraftTitle = `${baseTitle} ${candidate.new_title_tag}`.trim();\n\n    return [{\n      json: {\n        can_send: true,\n        draft_id: candidate.draft_id,\n        company_id: companyId,\n        company_name: company['Name'] || 'Prospect',\n        to_email: toEmail,\n        subject: threadSubject,\n        body: emailBody,\n        next_touch: candidate.next_touch,\n        touch_label: candidate.touch_label,\n        updated_draft_title: updatedDraftTitle,\n        timezone: targetTz,\n        local_time: `${localWeekday} ${localHour}:00`\n      }\n    }];\n  }\n}\n\nreturn [{ json: { can_send: false, reason: 'No eligible follow-up candidate currently within local business hours.' } }];"
+        "jsCode": "const companyItems = $input.all();\nconst candidateItems = $('Evaluate Cadence & Touch Due').all();\nconst safety = $('Collapse Safety Lists').first().json;\nconst suppressedDomains = new Set(safety.suppressed_domains || []);\n\nfunction resolveTimezone(cityStr) {\n  const city = (cityStr || '').trim();\n  if (/\\b(UK|United Kingdom|England|Scotland|Wales)\\b|london|manchester|birmingham|leeds|glasgow|liverpool|bristol|edinburgh/i.test(city)) {\n    return 'Europe/London';\n  }\n  if (/\\bAustralia\\b|sydney|melbourne|canberra|brisbane|perth|adelaide/i.test(city)) {\n    if (/perth/i.test(city)) return 'Australia/Perth';\n    if (/brisbane/i.test(city)) return 'Australia/Brisbane';\n    if (/adelaide/i.test(city)) return 'Australia/Adelaide';\n    return 'Australia/Sydney';\n  }\n  if (/\\bCanada\\b|toronto|ottawa|montreal|vancouver|calgary|edmonton/i.test(city)) {\n    if (/vancouver/i.test(city)) return 'America/Vancouver';\n    if (/calgary|edmonton/i.test(city)) return 'America/Edmonton';\n    return 'America/Toronto';\n  }\n  if (/\\b(NY|FL|GA|NC|PA|OH|VA|MA|DC|NJ|MI|MD|SC)\\b/i.test(city) || /new york|miami|atlanta|tampa|orlando|charlotte|boston|philadelphia|detroit/i.test(city)) {\n    return 'America/New_York';\n  } else if (/\\b(CA|WA|OR|NV)\\b/i.test(city) || /los angeles|san francisco|san diego|seattle|portland|las vegas|sacramento|san jose/i.test(city)) {\n    return 'America/Los_Angeles';\n  } else if (/\\b(CO|AZ|UT|NM)\\b/i.test(city) || /denver|phoenix|salt lake|albuquerque/i.test(city)) {\n    return 'America/Denver';\n  }\n  return 'America/Chicago';\n}\n\nfunction checkOfficeHours(tz) {\n  const formatter = new Intl.DateTimeFormat('en-US', {\n    timeZone: tz,\n    hour: 'numeric',\n    weekday: 'short',\n    hourCycle: 'h23'\n  });\n  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));\n  const localHour = parseInt(parts.hour, 10);\n  const localWeekday = parts.weekday;\n  const isOfficeHours = !['Sat', 'Sun'].includes(localWeekday) && localHour >= 9 && localHour < 17;\n  return { isOfficeHours, localHour, localWeekday };\n}\n\nconst companiesById = {};\nfor (const ci of companyItems) {\n  if (ci.json && ci.json.id) {\n    companiesById[ci.json.id] = ci.json;\n  }\n}\n\nconst senderFull = 'Laurence Emmanuel Supangan';\nconst role = 'Workflow Automation Specialist';\nconst portfolio = 'your-n8n.example.com';\nconst address = '38 San Jose St., Brgy. San Antonio, Quezon City, Metro Manila 1105, Philippines';\n\nfor (let i = 0; i < candidateItems.length; i++) {\n  const candidate = candidateItems[i].json;\n  const cRecord = companiesById[candidate.company_record_id];\n  const company = (cRecord && (cRecord.fields || cRecord)) || {};\n  const companyId = cRecord ? cRecord.id : candidate.company_record_id;\n\n  // Skip replied or rejected leads\n  const revStatus = (company['Review Status'] || '').toLowerCase();\n  // Only leads in good standing whose initial outreach was 'Sent' are eligible for follow-ups\n  if (revStatus !== 'sent') {\n    continue;\n  }\n\n  // Validate email\n  const rawEmail = company['Email'] || '';\n  const emailMatch = rawEmail.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})/);\n  if (!emailMatch) {\n    continue;\n  }\n  const toEmail = emailMatch[1].toLowerCase();\n\n  // Send-time opt-out / bounce check against the Suppression table (by domain)\n  const emailDomain = (toEmail.split('@')[1] || '').toLowerCase().trim();\n  const companyDomain = String(company['Domain'] || '').toLowerCase().trim();\n  if ((emailDomain && suppressedDomains.has(emailDomain)) || (companyDomain && suppressedDomains.has(companyDomain))) {\n    continue;\n  }\n\n  // Office hours check\n  const targetTz = resolveTimezone(company['City']);\n  const { isOfficeHours, localHour, localWeekday } = checkOfficeHours(targetTz);\n\n  if (isOfficeHours) {\n    // Non-deceptive, professional follow-up subject line\n    const rawSub = candidate.original_subject || 'workflow automation inquiry';\n    const cleanSub = rawSub.replace(/^re:\\s*/i, '').replace(/^follow-up:\\s*/i, '').trim();\n    // Maintain exact original subject line so Gmail & Outlook natively thread follow-ups\n    const threadSubject = cleanSub;\n\n    // Clean single sign-off\n    const cleanBodyText = candidate.followup_body.replace(/\\s*-\\s*Laurence.*$/is, '').trim();\n    const emailBody = `${cleanBodyText}\n\nLaurence\n${portfolio}\n${address}\nIf this isn't relevant, reply \"no\" and I won't email again.`;\n\n    const baseTitle = candidate.draft_title.replace(/\\s*\\[Touch \\d Sent\\]|\\s*\\[Sequence Completed\\]/g, '').trim();\n    const updatedDraftTitle = `${baseTitle} ${candidate.new_title_tag}`.trim();\n\n    return [{\n      json: {\n        can_send: true,\n        draft_id: candidate.draft_id,\n        company_id: companyId,\n        company_name: company['Name'] || 'Prospect',\n        to_email: toEmail,\n        subject: threadSubject,\n        body: emailBody,\n        next_touch: candidate.next_touch,\n        touch_label: candidate.touch_label,\n        updated_draft_title: updatedDraftTitle,\n        original_draft_title: candidate.draft_title,\n        original_sent_at: candidate.original_sent_at,\n        timezone: targetTz,\n        local_time: `${localWeekday} ${localHour}:00`\n      }\n    }];\n  }\n}\n\nreturn [{ json: { can_send: false, reason: 'No eligible follow-up candidate currently within local business hours.' } }];\n"
       }
     },
     {
@@ -158,13 +172,26 @@
       ],
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.can_send }}",
-              "value2": true
+              "id": "c-can-send",
+              "leftValue": "={{ $json.can_send }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
     },
     {
@@ -245,13 +272,26 @@
       ],
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
             {
-              "value1": "={{ Boolean($json.messageId) }}",
-              "value2": true
+              "id": "c-smtp-ok",
+              "leftValue": "={{ Boolean($json.messageId) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
     },
     {
@@ -327,8 +367,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2840,
-        360
+        3080,
+        520
       ],
       "continueOnFail": true,
       "parameters": {
@@ -346,7 +386,159 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({\n  alert_type: \"critical\",\n  title: \"🚨 Follow-Up Send Failure\",\n  message: \"Failed sending \" + $('Validate Lead & Office Hours Gate').first().json.touch_label + \" to \" + $('Validate Lead & Office Hours Gate').first().json.to_email + \" (\" + $('Validate Lead & Office Hours Gate').first().json.company_name + \"). Error: \" + ($json.error ? $json.error.message : \"SMTP failure\")\n}) }}"
+        "body": "={{ JSON.stringify({\n  alert_type: \"critical\",\n  title: \"🚨 Follow-Up Send Failure\",\n  message: \"Failed sending \" + $('Validate Lead & Office Hours Gate').first().json.touch_label + \" to \" + $('Validate Lead & Office Hours Gate').first().json.to_email + \" (\" + $('Validate Lead & Office Hours Gate').first().json.company_name + \"). The touch was returned to the queue and will retry next cycle. Error: \" + ($('Send Follow-Up via SMTP').first().json.error ? $('Send Follow-Up via SMTP').first().json.error.message : \"SMTP failure\")\n}) }}"
+      }
+    },
+    {
+      "id": "660a2398-5c67-48f1-8159-80469b72f0c7",
+      "name": "Fetch Suppression List",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        560
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "581b3d0e-c9ef-4c2e-9c6f-3349ba438b51",
+      "name": "Fetch Sends Today",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        720
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "filterByFormula": "IS_SAME({Sent At}, TODAY(), 'day')",
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "8c8f9f86-b6a1-4cac-beaf-9180271c50d1",
+      "name": "Collapse Safety Lists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        880
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Collapses the suppression list and today's send count into one item, and stops the run when the shared daily cap is reached.\nconst DAILY_CAP_TOTAL = 10; // first touches + follow-ups combined, one Gmail account\nconst supp = $('Fetch Suppression List').all().map(i => i.json).filter(j => j && j.id);\nconst domains = new Set();\nfor (const r of supp) {\n  const f = r.fields || r;\n  const d = String(f.Domain || '').toLowerCase().trim();\n  if (d) domains.add(d);\n}\nconst sendsToday = $input.all().filter(i => i.json && i.json.id).length;\nif (sendsToday >= DAILY_CAP_TOTAL) return []; // shared cap reached: nothing sends this cycle\nreturn [{ json: { suppressed_domains: [...domains], sends_today_total: sendsToday, daily_cap_total: DAILY_CAP_TOTAL } }];\n"
+      }
+    },
+    {
+      "id": "fix-fetch-stopped-leads",
+      "name": "Fetch Stopped Leads",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        640
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "filterByFormula": "AND({Review Status} != 'Sent', {Sent At} != BLANK())",
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "fix-revert-draft-lock",
+      "name": "Revert Draft Cadence (Send Failed)",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2840,
+        520
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $('Validate Lead & Office Hours Gate').first().json.draft_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Draft Title": "={{ $('Validate Lead & Office Hours Gate').first().json.original_draft_title }}",
+            "Sent At": "={{ $('Validate Lead & Office Hours Gate').first().json.original_sent_at }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
       }
     }
   ],
@@ -367,17 +559,6 @@
         [
           {
             "node": "If: Engine Active?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If: Engine Active?": {
-      "main": [
-        [
-          {
-            "node": "Fetch Sent Sequences from CRM",
             "type": "main",
             "index": 0
           }
@@ -472,7 +653,7 @@
         ],
         [
           {
-            "node": "Alert Discord: Follow-Up Failed",
+            "node": "Revert Draft Cadence (Send Failed)",
             "type": "main",
             "index": 0
           }
@@ -489,10 +670,78 @@
           }
         ]
       ]
+    },
+    "If: Engine Active?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Suppression List": {
+      "main": [
+        [
+          {
+            "node": "Fetch Sends Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Sends Today": {
+      "main": [
+        [
+          {
+            "node": "Collapse Safety Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collapse Safety Lists": {
+      "main": [
+        [
+          {
+            "node": "Fetch Stopped Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stopped Leads": {
+      "main": [
+        [
+          {
+            "node": "Fetch Sent Sequences from CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revert Draft Cadence (Send Failed)": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord: Follow-Up Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   },
   "active": false
 }

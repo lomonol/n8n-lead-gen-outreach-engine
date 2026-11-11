@@ -2,201 +2,13 @@
   "name": "Autonomous Outreach Dispatcher & 1-Click Discord Review",
   "nodes": [
     {
-      "id": "wf2-webhook-trigger",
-      "name": "1-Click Review Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        400,
-        300
-      ],
-      "parameters": {
-        "path": "review-lead",
-        "httpMethod": "GET",
-        "responseMode": "responseNode",
-        "options": {}
-      }
-    },
-    {
-      "id": "wf2-process-review",
-      "name": "Process Review Action",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        620,
-        300
-      ],
-      "parameters": {
-        "language": "javaScript",
-        "jsCode": "const query = $input.first().json.query || {};\nconst draftId = query.id;\nconst action = (query.action || '').toLowerCase().trim();\n\nif (!draftId) {\n  return [{ json: { success: false, message: 'Missing draft ID parameter.' } }];\n}\n\nreturn [{\n  json: {\n    draft_id: draftId,\n    action: action,\n    is_approve: action === 'approve',\n    is_reject: action === 'reject',\n    review_status: action === 'approve' ? 'Ready to Send' : 'Rejected'\n  }\n}];"
-      }
-    },
-    {
-      "id": "wf2-if-approve",
-      "name": "If: Is Approved?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        840,
-        300
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "c-approve",
-              "leftValue": "={{ $json.is_approve }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        }
-      }
-    },
-    {
-      "id": "wf2-airtable-update-draft-approve",
-      "name": "Update Draft to Ready to Send",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.2,
-      "position": [
-        1080,
-        200
-      ],
-      "parameters": {
-        "operation": "update",
-        "base": {
-          "__rl": true,
-          "value": "appYOUR_BASE_ID",
-          "mode": "list"
-        },
-        "table": {
-          "__rl": true,
-          "value": "tblYOUR_TABLE_ID",
-          "mode": "list"
-        },
-        "id": "={{ $('Process Review Action').item.json.draft_id }}",
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Review Status": "Ready to Send"
-          }
-        },
-        "options": {
-          "typecast": true
-        }
-      },
-      "credentials": {
-        "airtableTokenApi": {
-          "id": "REPLACE_ME",
-          "name": "Airtable Personal Access Token account"
-        }
-      }
-    },
-    {
-      "id": "wf2-respond-approved",
-      "name": "Respond Approved HTML",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        1320,
-        200
-      ],
-      "parameters": {
-        "options": {
-          "responseHeaders": {
-            "entries": [
-              {
-                "name": "Content-Type",
-                "value": "text/html; charset=utf-8"
-              }
-            ]
-          }
-        },
-        "respondWith": "text",
-        "responseBody": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>Draft Approved</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b0f19; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }\n    .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 40px; text-align: center; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }\n    .badge { display: inline-block; background: #064e3b; color: #34d399; font-weight: 600; font-size: 13px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 16px; border: 1px solid #059669; }\n    h2 { margin: 0 0 12px 0; color: #ffffff; font-size: 24px; font-weight: 700; }\n    p { margin: 0 0 24px 0; color: #94a3b8; font-size: 15px; line-height: 1.6; }\n    .close-hint { font-size: 13px; color: #64748b; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"badge\">Approved & Queued</div>\n    <h2>✅ Lead Approved!</h2>\n    <p>This draft is now marked <strong>Ready to Send</strong> in your Airtable priority queue. The scheduled dispatcher will pick it up on its next business-hours cycle.</p>\n    <div class=\"close-hint\">You can safely close this tab and return to Discord.</div>\n  </div>\n</body>\n</html>"
-      }
-    },
-    {
-      "id": "wf2-airtable-update-draft-reject",
-      "name": "Update Draft to Rejected",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2.2,
-      "position": [
-        1080,
-        420
-      ],
-      "parameters": {
-        "operation": "update",
-        "base": {
-          "__rl": true,
-          "value": "appYOUR_BASE_ID",
-          "mode": "list"
-        },
-        "table": {
-          "__rl": true,
-          "value": "tblYOUR_TABLE_ID",
-          "mode": "list"
-        },
-        "id": "={{ $('Process Review Action').item.json.draft_id }}",
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "Review Status": "Rejected"
-          }
-        },
-        "options": {
-          "typecast": true
-        }
-      },
-      "credentials": {
-        "airtableTokenApi": {
-          "id": "REPLACE_ME",
-          "name": "Airtable Personal Access Token account"
-        }
-      }
-    },
-    {
-      "id": "wf2-respond-rejected",
-      "name": "Respond Rejected HTML",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        1320,
-        420
-      ],
-      "parameters": {
-        "options": {
-          "responseHeaders": {
-            "entries": [
-              {
-                "name": "Content-Type",
-                "value": "text/html; charset=utf-8"
-              }
-            ]
-          }
-        },
-        "respondWith": "text",
-        "responseBody": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>Draft Rejected</title>\n  <style>\n    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b0f19; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }\n    .card { background: #131b2e; border: 1px solid #1e293b; border-radius: 16px; padding: 40px; text-align: center; max-width: 440px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }\n    .badge { display: inline-block; background: #450a0a; color: #f87171; font-weight: 600; font-size: 13px; padding: 4px 12px; border-radius: 9999px; margin-bottom: 16px; border: 1px solid #991b1b; }\n    h2 { margin: 0 0 12px 0; color: #ffffff; font-size: 24px; font-weight: 700; }\n    p { margin: 0 0 24px 0; color: #94a3b8; font-size: 15px; line-height: 1.6; }\n    .close-hint { font-size: 13px; color: #64748b; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"badge\">Rejected & Excluded</div>\n    <h2>❌ Lead Rejected</h2>\n    <p>This draft has been discarded and marked as <strong>Rejected</strong>. It will not be sent, and no follow-ups will be generated.</p>\n    <div class=\"close-hint\">You can safely close this tab and return to Discord.</div>\n  </div>\n</body>\n</html>"
-      }
-    },
-    {
-      "id": "wf2-schedule-dispatcher",
+      "id": "wf2-dispatcher-cron",
       "name": "Every 25 Mins (Dispatcher)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        400,
-        700
+        360,
+        400
       ],
       "parameters": {
         "rule": {
@@ -210,17 +22,33 @@
       }
     },
     {
+      "id": "wf2-check-killswitch",
+      "name": "Check Shared Kill-Switch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        400
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "http://outreach_discord_bot:5005/system/killswitch",
+        "sendHeaders": false
+      }
+    },
+    {
       "id": "wf2-dispatcher-preflight",
       "name": "Dispatcher Pre-Flight Gate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        620,
-        700
+        800,
+        400
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\n// 1. Check Circuit Breaker / Kill Switch\nif (staticData.isPaused || staticData.killSwitchActive) {\n  return []; // Halted due to bounce or manual pause\n}\n\n// 2. Track daily send count (starts at 5-10/day)\nconst today = new Date().toISOString().slice(0, 10);\nif (staticData.sendDate !== today) {\n  staticData.sendDate = today;\n  staticData.sendsToday = 0;\n}\n\nconst maxSendsPerDay = 10; // Ramp-up cap: 5-10/day\nif (staticData.sendsToday >= maxSendsPerDay) {\n  return []; // Daily quota reached\n}\n\n// 3. Operating Days: Monday to Friday\nconst dayOfWeek = new Date().getUTCDay(); // 0 is Sunday, 6 is Saturday\nif (dayOfWeek === 0 || dayOfWeek === 6) {\n  return []; // Do not send on weekends\n}\n\nreturn [{\n  json: {\n    proceed: true,\n    sends_today: staticData.sendsToday,\n    max_sends: maxSendsPerDay\n  }\n}];"
+        "jsCode": "// 1. Check Shared Kill-Switch state from outreach_discord_bot\nlet killSwitch = {};\ntry {\n  killSwitch = $('Check Shared Kill-Switch').first()?.json || {};\n} catch (e) {\n  killSwitch = {};\n}\n\n// Fail-closed security check: only proceed if kill-switch is explicitly reachable and is_paused is strictly false\nif (killSwitch.is_paused !== false) {\n  // Dispatcher safely halted (paused, unreachable, or in error state)\n  return [];\n}\n\n// 2. Track daily send count (starts at 6/day for clean warm-up)\nconst staticData = $getWorkflowStaticData('global');\nconst today = new Date().toISOString().slice(0, 10);\nif (staticData.sendDate !== today) {\n  staticData.sendDate = today;\n  staticData.sendsToday = 0;\n  staticData.lastSendTime = 0;\n}\n\nconst maxSendsPerDay = 6; // Week 1 safe ramp-up cap: 6 emails/day\nif (staticData.sendsToday >= maxSendsPerDay) {\n  return []; // Daily quota reached\n}\n\n// 3. Randomized Human Delay (35 to 75 minutes between dispatches)\nconst minGapMs = (35 + Math.random() * 40) * 60 * 1000;\nconst timeSinceLastSend = Date.now() - (staticData.lastSendTime || 0);\n\nif (staticData.sendsToday > 0 && timeSinceLastSend < minGapMs) {\n  return []; // Wait for natural human interval\n}\n\nreturn [{\n  json: {\n    proceed: true,\n    sends_today: staticData.sendsToday,\n    max_sends: maxSendsPerDay\n  }\n}];"
       }
     },
     {
@@ -229,8 +57,8 @@
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2.2,
       "position": [
-        840,
-        700
+        1020,
+        400
       ],
       "parameters": {
         "operation": "search",
@@ -245,8 +73,8 @@
           "mode": "list"
         },
         "returnAll": false,
-        "limit": 1,
-        "filterByFormula": "AND({Review Status} = 'Ready to Send', {Sent At} = BLANK())",
+        "limit": 5,
+        "filterByFormula": "AND(OR({Review Status} = 'Ready to Send', {Review Status} = 'Ready to Send (Tier B Standby)'), {Sent At} = BLANK(), {Company} != '')",
         "sort": {
           "property": [
             {
@@ -265,13 +93,13 @@
       }
     },
     {
-      "id": "wf2-if-has-draft",
+      "id": "wf2-has-draft-ready",
       "name": "If: Has Draft Ready?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "typeVersion": 2,
       "position": [
-        1080,
-        700
+        1240,
+        400
       ],
       "parameters": {
         "conditions": {
@@ -288,12 +116,14 @@
               "rightValue": "",
               "operator": {
                 "type": "string",
-                "operation": "notEmpty"
+                "operation": "notEmpty",
+                "singleValue": true
               }
             }
           ],
           "combinator": "and"
-        }
+        },
+        "options": {}
       }
     },
     {
@@ -302,8 +132,8 @@
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2.2,
       "position": [
-        1320,
-        680
+        1460,
+        380
       ],
       "parameters": {
         "operation": "get",
@@ -317,37 +147,101 @@
           "value": "tblYOUR_TABLE_ID",
           "mode": "list"
         },
-        "id": "={{ $('Fetch Top Priority Draft').item.json.fields.Company ? $('Fetch Top Priority Draft').item.json.fields.Company[0] : '' }}"
+        "id": "={{ ($json.fields?.Company || $json.Company || [])[0] || '' }}"
       },
       "credentials": {
         "airtableTokenApi": {
           "id": "REPLACE_ME",
           "name": "Airtable Personal Access Token account"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
-      "id": "wf2-send-email-placeholder",
-      "name": "Send Outreach Email (Gmail / SMTP)",
+      "id": "wf2-validate-lead-timezone",
+      "name": "Validate Lead & Office Hours",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1560,
-        680
+        1680,
+        380
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "// PLACEHOLDER: Ready to be connected to Gmail node or SMTP node\nconst draft = $('Fetch Top Priority Draft').item.json.fields || {};\nconst company = $json.fields || {};\nconst recipientEmail = company.Email || draft.Domain;\nconst subject = draft.Subject || 'quick workflow note';\nconst body = draft.email_1 || '';\n\n// Will send via dedicated Gmail / SMTP when user credentials are provided\nreturn [{\n  json: {\n    status: 'READY_TO_DISPATCH',\n    recipient: recipientEmail,\n    subject: subject,\n    body: body,\n    draft_id: $('Fetch Top Priority Draft').item.json.id,\n    company_id: $json.id\n  }\n}];"
+        "jsCode": "const companyItems = $input.all();\nconst draftItems = $('Fetch Top Priority Draft').all();\nconst safety = $('Collapse Safety Lists').first().json;\nconst suppressedDomains = new Set(safety.suppressed_domains || []);\n\nfunction resolveTimezone(cityStr) {\n  const city = (cityStr || '').trim();\n  if (/\\b(UK|United Kingdom|England|Scotland|Wales)\\b|london|manchester|birmingham|leeds|glasgow|liverpool|bristol|edinburgh/i.test(city)) {\n    return 'Europe/London';\n  }\n  if (/\\bAustralia\\b|sydney|melbourne|canberra|brisbane|perth|adelaide/i.test(city)) {\n    if (/perth/i.test(city)) return 'Australia/Perth';\n    if (/brisbane/i.test(city)) return 'Australia/Brisbane';\n    if (/adelaide/i.test(city)) return 'Australia/Adelaide';\n    return 'Australia/Sydney';\n  }\n  if (/\\bCanada\\b|toronto|ottawa|montreal|vancouver|calgary|edmonton/i.test(city)) {\n    if (/vancouver/i.test(city)) return 'America/Vancouver';\n    if (/calgary|edmonton/i.test(city)) return 'America/Edmonton';\n    return 'America/Toronto';\n  }\n  if (/\\b(NY|FL|GA|NC|PA|OH|VA|MA|DC|NJ|MI|MD|SC)\\b/i.test(city) || /new york|miami|atlanta|tampa|orlando|charlotte|boston|philadelphia|detroit/i.test(city)) {\n    return 'America/New_York';\n  } else if (/\\b(CA|WA|OR|NV)\\b/i.test(city) || /los angeles|san francisco|san diego|seattle|portland|las vegas|sacramento|san jose/i.test(city)) {\n    return 'America/Los_Angeles';\n  } else if (/\\b(CO|AZ|UT|NM)\\b/i.test(city) || /denver|phoenix|salt lake|albuquerque/i.test(city)) {\n    return 'America/Denver';\n  }\n  return 'America/Chicago';\n}\n\nfunction checkOfficeHours(tz) {\n  const formatter = new Intl.DateTimeFormat('en-US', {\n    timeZone: tz,\n    hour: 'numeric',\n    weekday: 'short',\n    hourCycle: 'h23'\n  });\n  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map(p => [p.type, p.value]));\n  const localHour = parseInt(parts.hour, 10);\n  const localWeekday = parts.weekday;\n  const isOfficeHours = !['Sat', 'Sun'].includes(localWeekday) && localHour >= 9 && localHour < 17;\n  return { isOfficeHours, localHour, localWeekday };\n}\n\n// Build map of company records by id\nconst companiesById = {};\nfor (const ci of companyItems) {\n  if (ci.json && ci.json.id) {\n    companiesById[ci.json.id] = ci.json;\n  }\n}\n\n// Evaluate drafts in order of send priority\nfor (let i = 0; i < draftItems.length; i++) {\n  const dItem = draftItems[i];\n  const draft = dItem.json.fields || dItem.json;\n  const draftId = dItem.json.id;\n  const linkedCompanyId = (draft.Company && draft.Company.length) ? draft.Company[0] : null;\n  const cRecord = linkedCompanyId ? companiesById[linkedCompanyId] : null;\n  const company = (cRecord && (cRecord.fields || cRecord)) || {};\n  const companyId = cRecord ? cRecord.id : linkedCompanyId;\n\n  // Strict verification: Company must be in 'Ready to Send' status\n  const revStatus = (company['Review Status'] || '').trim();\n  if (revStatus !== 'Ready to Send' && revStatus !== 'Ready to Send (Tier B Standby)') {\n    return [{\n      json: {\n        action: 'INVALID_EMAIL',\n        reason: 'Linked company status is ' + (revStatus || 'unknown') + ' (must be Ready to Send). Discarding draft.',\n        draft_id: draftId,\n        company_id: companyId,\n        company_name: company.Name || 'Unknown Company',\n        subject: draft.Subject || ''\n      }\n    }];\n  }\n\n  const rawEmail = (company.Email || '').trim();\n\n  // Send-time opt-out / bounce check against the Suppression table (by domain)\n  const emailDomain = (rawEmail.split('@')[1] || '').toLowerCase().trim();\n  const companyDomain = String(company.Domain || '').toLowerCase().trim();\n  if ((emailDomain && suppressedDomains.has(emailDomain)) || (companyDomain && suppressedDomains.has(companyDomain))) {\n    return [{\n      json: {\n        action: 'INVALID_EMAIL',\n        reason: 'Recipient domain is on the suppression list. Discarding draft.',\n        draft_id: draftId,\n        company_id: companyId,\n        company_name: company.Name || 'Unknown Company',\n        subject: draft.Subject || ''\n      }\n    }];\n  }\n\n  // Strict email validation\n  const emailMatch = rawEmail.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/);\n  if (!emailMatch) {\n    return [{\n      json: {\n        action: 'INVALID_EMAIL',\n        reason: 'No valid contact email found for recipient.',\n        draft_id: draftId,\n        company_id: companyId,\n        company_name: company.Name || 'Unknown Company',\n        subject: draft.Subject || ''\n      }\n    }];\n  }\n\n  // Timezone & office hours check\n  const tz = resolveTimezone(company.City);\n  const { isOfficeHours, localHour, localWeekday } = checkOfficeHours(tz);\n\n  if (isOfficeHours) {\n    // Found the highest-priority lead whose local business hours are currently open!\n    return [{\n      json: {\n        action: 'DISPATCH',\n        recipient_email: rawEmail,\n        recipient_tz: tz,\n        local_hour: localHour,\n        local_weekday: localWeekday,\n        draft_id: draftId,\n        company_id: companyId,\n        company_name: company.Name || 'Company',\n        tier: company.Tier || 'Tier A',\n        send_priority: draft['Send Priority'] || 80,\n        subject: draft.Subject,\n        email_body: draft.email_1\n      }\n    }];\n  }\n}\n\n// If all candidates are currently outside their local business hours, wait for the next cycle\nconst firstDraftId = draftItems[0]?.json?.id;\nreturn [{\n  json: {\n    action: 'WAIT_OFFICE_HOURS',\n    reason: 'All candidate leads are currently outside local office hours. Will retry on next 25-minute cycle.',\n    draft_id: firstDraftId\n  }\n}];\n"
       }
     },
     {
-      "id": "wf2-update-draft-sent",
-      "name": "Update Draft as Sent",
+      "id": "wf2-switch-action",
+      "name": "Switch: Dispatch vs Invalid",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1900,
+        380
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "dispatch",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-dispatch",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "DISPATCH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "invalid_email",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c-invalid",
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "INVALID_EMAIL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf2-reject-invalid-draft",
+      "name": "Discard Draft (Invalid Email)",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2.2,
       "position": [
-        1800,
-        680
+        2120,
+        560
       ],
       "parameters": {
         "operation": "update",
@@ -361,12 +255,177 @@
           "value": "tblYOUR_TABLE_ID",
           "mode": "list"
         },
-        "id": "={{ $('Send Outreach Email (Gmail / SMTP)').item.json.draft_id }}",
+        "id": "={{ $json.draft_id }}",
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Review Status": "Sent",
+            "Review Status": "Rejected"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf2-alert-invalid-email",
+      "name": "Alert Discord: Invalid Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        560
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  alert_type: \"warning\",\n  title: \"Unsendable Draft Discarded\",\n  message: \"Draft for \" + $('Validate Lead & Office Hours').first().json.company_name + \" was discarded: \" + ($('Validate Lead & Office Hours').first().json.reason || \"no valid recipient email address could be verified\")\n}) }}"
+      }
+    },
+    {
+      "id": "wf2-lock-draft-sending",
+      "name": "Pre-Send Lock: Set Sent At",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2120,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $json.draft_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
             "Sent At": "={{ new Date().toISOString() }}"
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf2-send-email-smtp",
+      "name": "Send Outreach Email (SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2340,
+        300
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "fromEmail": "Laurence Supangan <you@example.com>",
+        "toEmail": "={{ $('Validate Lead & Office Hours').first().json.recipient_email }}",
+        "subject": "={{ $('Validate Lead & Office Hours').first().json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $('Validate Lead & Office Hours').first().json.email_body }}",
+        "options": {
+          "replyTo": "you@example.com"
+        }
+      },
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_ME",
+          "name": "Laurence Outreach Gmail (SMTP)"
+        }
+      }
+    },
+    {
+      "id": "wf2-if-send-succeeded",
+      "name": "If: Send Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c-send-ok",
+              "leftValue": "={{ Boolean($json.error) }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf2-update-draft-sent",
+      "name": "Update Draft as Sent",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2800,
+        220
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $('Validate Lead & Office Hours').first().json.draft_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Review Status": "Sent"
           }
         },
         "options": {
@@ -386,8 +445,8 @@
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2.2,
       "position": [
-        2020,
-        680
+        3020,
+        220
       ],
       "parameters": {
         "operation": "update",
@@ -401,7 +460,7 @@
           "value": "tblYOUR_TABLE_ID",
           "mode": "list"
         },
-        "id": "={{ $('Send Outreach Email (Gmail / SMTP)').item.json.company_id }}",
+        "id": "={{ $('Validate Lead & Office Hours').first().json.company_id }}",
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -421,99 +480,249 @@
       }
     },
     {
-      "id": "wf2-increment-counter",
+      "id": "wf2-increment-send-counter",
       "name": "Increment Daily Send Counter",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
-        680
+        3240,
+        220
       ],
       "parameters": {
         "language": "javaScript",
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.sendsToday = (staticData.sendsToday || 0) + 1;\nreturn [{\n  json: {\n    status: 'DISPATCH_LOGGED',\n    sends_today: staticData.sendsToday\n  }\n}];"
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nstaticData.sendsToday = (staticData.sendsToday || 0) + 1;\nstaticData.lastSendTime = Date.now();\n\nconst lead = $('Validate Lead & Office Hours').first().json;\n\nreturn [{\n  json: {\n    sends_today: staticData.sendsToday,\n    recipient_email: lead.recipient_email,\n    company_name: lead.company_name,\n    subject: lead.subject,\n    tier: lead.tier,\n    send_priority: lead.send_priority\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf2-notify-discord-dispatched",
+      "name": "Notify Discord: Email Dispatched",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3460,
+        220
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/feed",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  event_type: \"email_sent\",\n  data: {\n    recipient_email: $json.recipient_email,\n    company_name: $json.company_name,\n    subject: $json.subject,\n    tier: $json.tier,\n    send_priority: $json.send_priority\n  }\n}) }}"
+      }
+    },
+    {
+      "id": "wf2-mark-draft-failed",
+      "name": "Mark Draft Send Failed",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2800,
+        420
+      ],
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "id": "={{ $('Validate Lead & Office Hours').first().json.draft_id }}",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Review Status": "Review Required",
+            "Sent At": null
+          }
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "id": "wf2-alert-discord-dispatch-error",
+      "name": "Alert Discord: Dispatch Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3020,
+        420
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  alert_type: \"error\",\n  title: \"🚨 Cold Email Dispatch Error\",\n  message: \"Failed to send email to \" + $('Validate Lead & Office Hours').first().json.recipient_email + \" (\" + $('Validate Lead & Office Hours').first().json.company_name + \"). The draft has been returned to Review Required status. Details: \" + ($('Send Outreach Email (SMTP)').first().json.error?.message || 'SMTP timeout or connection error')\n}) }}"
+      }
+    },
+    {
+      "id": "wf2-9pm-schedule",
+      "name": "9:00 PM Daily EOD Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        900
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf2-trigger-approval-deck",
+      "name": "Trigger 9PM Approval Deck",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        900
+      ],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/approval-deck",
+        "sendHeaders": false
+      }
+    },
+    {
+      "id": "94a1d7c5-d9d6-4a07-a65e-4c6440336a7d",
+      "name": "Fetch Suppression List",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1020,
+        560
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "d2759f44-191e-4535-81b9-57dcf85735ea",
+      "name": "Fetch Sends Today",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1020,
+        720
+      ],
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appYOUR_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblYOUR_TABLE_ID",
+          "mode": "list"
+        },
+        "returnAll": true,
+        "filterByFormula": "IS_SAME({Sent At}, TODAY(), 'day')",
+        "options": {}
+      },
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "REPLACE_ME",
+          "name": "Airtable Personal Access Token account"
+        }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "id": "715278fc-9bfd-4865-b8dd-7fb7cf758dc0",
+      "name": "Collapse Safety Lists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        880
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Collapses the suppression list and today's send count into one item, and stops the run when the shared daily cap is reached.\nconst DAILY_CAP_TOTAL = 10; // first touches + follow-ups combined, one Gmail account\nconst supp = $('Fetch Suppression List').all().map(i => i.json).filter(j => j && j.id);\nconst domains = new Set();\nfor (const r of supp) {\n  const f = r.fields || r;\n  const d = String(f.Domain || '').toLowerCase().trim();\n  if (d) domains.add(d);\n}\nconst sendsToday = $input.all().filter(i => i.json && i.json.id).length;\nif (sendsToday >= DAILY_CAP_TOTAL) return []; // shared cap reached: nothing sends this cycle\nreturn [{ json: { suppressed_domains: [...domains], sends_today_total: sendsToday, daily_cap_total: DAILY_CAP_TOTAL } }];\n"
       }
     }
   ],
   "connections": {
-    "1-Click Review Webhook": {
-      "main": [
-        [
-          {
-            "node": "Process Review Action",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Process Review Action": {
-      "main": [
-        [
-          {
-            "node": "If: Is Approved?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If: Is Approved?": {
-      "main": [
-        [
-          {
-            "node": "Update Draft to Ready to Send",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Update Draft to Rejected",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Draft to Ready to Send": {
-      "main": [
-        [
-          {
-            "node": "Respond Approved HTML",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Draft to Rejected": {
-      "main": [
-        [
-          {
-            "node": "Respond Rejected HTML",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Every 25 Mins (Dispatcher)": {
       "main": [
         [
           {
-            "node": "Dispatcher Pre-Flight Gate",
+            "node": "Check Shared Kill-Switch",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Dispatcher Pre-Flight Gate": {
+    "Check Shared Kill-Switch": {
       "main": [
         [
           {
-            "node": "Fetch Top Priority Draft",
+            "node": "Dispatcher Pre-Flight Gate",
             "type": "main",
             "index": 0
           }
@@ -539,25 +748,95 @@
             "type": "main",
             "index": 0
           }
-        ]
+        ],
+        []
       ]
     },
     "Fetch Recipient Company": {
       "main": [
         [
           {
-            "node": "Send Outreach Email (Gmail / SMTP)",
+            "node": "Validate Lead & Office Hours",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send Outreach Email (Gmail / SMTP)": {
+    "Validate Lead & Office Hours": {
+      "main": [
+        [
+          {
+            "node": "Switch: Dispatch vs Invalid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Dispatch vs Invalid": {
+      "main": [
+        [
+          {
+            "node": "Pre-Send Lock: Set Sent At",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Discard Draft (Invalid Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discard Draft (Invalid Email)": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord: Invalid Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Send Lock: Set Sent At": {
+      "main": [
+        [
+          {
+            "node": "Send Outreach Email (SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Outreach Email (SMTP)": {
+      "main": [
+        [
+          {
+            "node": "If: Send Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Send Succeeded?": {
       "main": [
         [
           {
             "node": "Update Draft as Sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Draft Send Failed",
             "type": "main",
             "index": 0
           }
@@ -585,10 +864,89 @@
           }
         ]
       ]
+    },
+    "Increment Daily Send Counter": {
+      "main": [
+        [
+          {
+            "node": "Notify Discord: Email Dispatched",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Draft Send Failed": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord: Dispatch Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9:00 PM Daily EOD Schedule": {
+      "main": [
+        [
+          {
+            "node": "Trigger 9PM Approval Deck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dispatcher Pre-Flight Gate": {
+      "main": [
+        [
+          {
+            "node": "Fetch Suppression List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Suppression List": {
+      "main": [
+        [
+          {
+            "node": "Fetch Sends Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Sends Today": {
+      "main": [
+        [
+          {
+            "node": "Collapse Safety Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collapse Safety Lists": {
+      "main": [
+        [
+          {
+            "node": "Fetch Top Priority Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   },
   "active": false
 }
