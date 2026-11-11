@@ -12,8 +12,6 @@
 | **Stack** | n8n, Playwright + FastAPI (self-hosted Maps scraper), Airtable, Discord, Gmail SMTP, an OpenAI-compatible LLM endpoint, OpenRouter, Jina reader, DNS over HTTPS |
 | **Status** | The lead engine is built and has run in test executions. **It has not been run on real prospects and I have sent nothing.** Two parts of the outreach half are still placeholders, marked below. |
 
-> **If you only read one section:** [Why this is interesting](#why-this-is-interesting) and [Where it stands](#where-it-stands).
-
 ---
 
 ## The problem
@@ -30,14 +28,6 @@ A good prospecting system has to do four things most "AI outreach" tools skip: *
 - Only leads above the score floor, and only up to a **daily cap**, ever reach the LLM.
 - The model writes a four-part sequence from a menu of detected facts. **Code then validates the draft** and triggers an automatic repair pass if it fails.
 - A human approves or rejects from Discord. Follow-ups respect the recipient's office hours. Replies and bounces feed a suppression list and a kill switch.
-
-## Why this is interesting
-
-1. **Spend follows quality.** The expensive step (LLM drafting) sits behind free filters and a scoring gate, so cost scales with good leads, not with everything scraped.
-2. **The model cannot invent facts.** It is handed a menu of signals the code verified on the website and must name which one it used; the validator rejects any draft that cites a signal that was not detected.
-3. **Output is checked by code, not trusted.** Word counts, banned phrases, punctuation rules and signal grounding are enforced in a validator with a repair loop.
-4. **Human review is built in, not bolted on.** Nothing is sent without an approval, and a kill switch can halt sending.
-5. **It says what it is not.** Status and gaps are stated up front.
 
 ---
 
