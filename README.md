@@ -10,7 +10,8 @@
 | **My role** | Sole designer and builder: scraper customisation, scoring model, prompt and validation design, approval, sequencing and safety controls |
 | **Scale** | 5 workflows: the lead engine (41 nodes), a dispatcher with Discord review (24), a follow-up sequencer (19), a reply and bounce engine (19) and an inbound contact triage (9) |
 | **Stack** | n8n, Playwright + FastAPI (self-hosted Maps scraper), Airtable, Discord, Gmail SMTP and IMAP, OpenAI-compatible LLM endpoints, Jina reader, DNS over HTTPS, a mailbox verification API |
-| **Status** | Tested on synthetic leads with a self-hosted model (100 engine runs, a 21-day outreach simulation) and checked once against the real services using the author's own addresses (results below). Not yet run on real prospects; no email has been sent to a prospect. |
+| **Status** | Tested on synthetic leads with a self-hosted model (100 engine runs, a 21-day outreach simulation) and checked once against the real services using the author's own addresses (results below). Not run on real prospects; no email has been sent to a prospect. |
+| **Results** | On synthetic data: 300 of 300 leads accounted for, 0 of 63 simulated sends broke a safety rule over 21 days, 23 of 23 opt-outs and bounces suppressed the right domain |
 
 ---
 
@@ -213,7 +214,7 @@ I ran the dispatcher, follow-up sequencer and reply engine against a simulated c
 | Check | Result |
 |---|---|
 | Stub sends (43 first touches, 20 follow-ups) | 63 |
-| Safety violations of any kind (checked independently of the workflow code) | 0 |
+| Sends that broke a safety rule (checked independently of the workflow code) | 0 of 63 |
 | Sends to a suppressed domain after suppression | 0 |
 | Sends outside 09:00 to 17:00 local, Monday to Friday | 0 |
 | Days over the shared 10-per-day cap | 0 |
