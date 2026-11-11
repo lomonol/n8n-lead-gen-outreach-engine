@@ -220,8 +220,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Draft Title": "={{ $json.updated_draft_title }}",
-            "Sent At": "={{ new Date().toISOString() }}"
-          }
+            "Sent At": "={{ new Date().toISOString() }}",
+            "id": "={{ $json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -319,8 +323,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Sent At": "={{ new Date().toISOString() }}"
-          }
+            "Sent At": "={{ new Date().toISOString() }}",
+            "id": "={{ $('Validate Lead & Office Hours Gate').first().json.company_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -527,8 +535,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Draft Title": "={{ $('Validate Lead & Office Hours Gate').first().json.original_draft_title }}",
-            "Sent At": "={{ $('Validate Lead & Office Hours Gate').first().json.original_sent_at }}"
-          }
+            "Sent At": "={{ $('Validate Lead & Office Hours Gate').first().json.original_sent_at }}",
+            "id": "={{ $('Validate Lead & Office Hours Gate').first().json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true

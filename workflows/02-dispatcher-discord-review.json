@@ -259,8 +259,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Review Status": "Rejected"
-          }
+            "Review Status": "Rejected",
+            "id": "={{ $json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -326,8 +330,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Sent At": "={{ new Date().toISOString() }}"
-          }
+            "Sent At": "={{ new Date().toISOString() }}",
+            "id": "={{ $json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -425,8 +433,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Review Status": "Sent"
-          }
+            "Review Status": "Sent",
+            "id": "={{ $('Validate Lead & Office Hours').first().json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -465,8 +477,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Review Status": "Sent",
-            "Sent At": "={{ new Date().toISOString() }}"
-          }
+            "Sent At": "={{ new Date().toISOString() }}",
+            "id": "={{ $('Validate Lead & Office Hours').first().json.company_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -547,8 +563,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Review Status": "Review Required",
-            "Sent At": null
-          }
+            "Sent At": null,
+            "id": "={{ $('Validate Lead & Office Hours').first().json.draft_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true

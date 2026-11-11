@@ -270,8 +270,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Review Status": "Rejected",
-            "Notes": "={{ 'Opt-out requested: ' + ($('Merge Inbound with CRM Match').first().json.clean_reply_body || 'Unsubscribe') }}"
-          }
+            "Notes": "={{ 'Opt-out requested: ' + ($('Merge Inbound with CRM Match').first().json.clean_reply_body || 'Unsubscribe') }}",
+            "id": "={{ $('Merge Inbound with CRM Match').first().json.crm_matched_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -421,8 +425,12 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Review Status": "Replied"
-          }
+            "Review Status": "Replied",
+            "id": "={{ $('Merge Inbound with CRM Match').first().json.crm_matched_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
@@ -490,8 +498,12 @@
           "mappingMode": "defineBelow",
           "value": {
             "Review Status": "Rejected",
-            "Notes": "={{ 'Hard bounce recorded: ' + ($('Merge Inbound with CRM Match').first().json.failed_recipient || 'prospect') + ' - suppressed from all touches.' }}"
-          }
+            "Notes": "={{ 'Hard bounce recorded: ' + ($('Merge Inbound with CRM Match').first().json.failed_recipient || 'prospect') + ' - suppressed from all touches.' }}",
+            "id": "={{ $('Merge Inbound with CRM Match').first().json.crm_matched_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true

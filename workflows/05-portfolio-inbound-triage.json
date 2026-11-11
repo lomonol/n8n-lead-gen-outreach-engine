@@ -160,9 +160,13 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "id": "={{ $json.matched_company_id }}",
             "Review Status": "Replied",
             "Notes": "={{ `Inbound Form Note: ${$json.message}\\n(Previous Outreach Status: ${$json.existing_status || 'Unknown'})` }}"
-          }
+          },
+          "matchingColumns": [
+            "id"
+          ]
         },
         "options": {
           "typecast": true
