@@ -10,7 +10,7 @@
 | **My role** | Sole designer and builder: scraper customisation, scoring model, prompt and validation design, approval, sequencing and safety controls |
 | **Scale** | 5 workflows: the lead engine (41 nodes), a dispatcher with Discord review (24), a follow-up sequencer (19), a reply and bounce engine (19) and an inbound contact triage (9) |
 | **Stack** | n8n, Playwright + FastAPI (self-hosted Maps scraper), Airtable, Discord, Gmail SMTP and IMAP, OpenAI-compatible LLM endpoints, Jina reader, DNS over HTTPS, a mailbox verification API |
-| **Status** | Tested end to end on synthetic leads with a self-hosted model: 100 engine runs and a 21-day outreach simulation (results below). Not yet run on real prospects; no email has been sent to a prospect. |
+| **Status** | Tested on synthetic leads with a self-hosted model (100 engine runs, a 21-day outreach simulation) and checked once against the real services using the author's own addresses (results below). Not yet run on real prospects; no email has been sent to a prospect. |
 
 ---
 
@@ -208,21 +208,33 @@ Every lead ends in exactly one state: drafted, disqualified, parked (no website 
 
 ### Outreach safety: 21 simulated days
 
-I ran the dispatcher, follow-up sequencer and reply engine against a simulated clock with a stubbed sender: 1,209 dispatcher cycles and 1,008 sequencer cycles, 60 leads in 18 cities across 10 time zones, and 57 inbound events (opt-outs, hard bounces, delay notices, out-of-office replies, unsolicited mail and human replies). The kill switch was made unreachable for 14 hours and paused by hand once.
+I ran the dispatcher, follow-up sequencer and reply engine against a simulated clock with a stubbed sender: 1,209 dispatcher cycles and 1,008 sequencer cycles, 60 leads in 18 cities across 10 time zones, and 55 inbound events (opt-outs, hard bounces, delay notices, out-of-office replies, unsolicited mail and human replies). The kill switch was unreachable for 14 simulated hours and paused by hand once, and 25% of follow-up sends were forced to fail.
 
 | Check | Result |
 |---|---|
-| Stub sends (45 first touches, 23 follow-ups) | 68 |
+| Stub sends (43 first touches, 20 follow-ups) | 63 |
+| Safety violations of any kind (checked independently of the workflow code) | 0 |
 | Sends to a suppressed domain after suppression | 0 |
 | Sends outside 09:00 to 17:00 local, Monday to Friday | 0 |
 | Days over the shared 10-per-day cap | 0 |
 | Sends while the kill switch was paused or unreachable | 0 |
-| Opt-outs and bounces that suppressed the right domain | 20 of 20 |
+| Expected suppressions (opt-outs, hard negatives, bounces) recorded for the right domain | 23 of 23 |
 | Hard bounces that tripped the shared kill switch | 5 of 5 |
-| Failed sends retried on the next cycle (25% forced failure rate) | 9 of 9 |
-| Human replies classified to the right intent (self-hosted model) | 26 of 28 |
+| Failed follow-up sends retried on the next cycle | 9 of 9 |
+| Human replies classified to the right intent (self-hosted model) | 24 of 26; hard negatives 6 of 6 |
 
-The numbers come from synthetic leads, so they show that the logic behaves as designed, not what a live campaign would return.
+### Live check with real services
+
+Before any activation, the dispatcher, sequencer and reply engine were run once against the real CRM, mail server, chat feed and kill-switch bot, using test rows with a fake domain and the author's own addresses. The dispatcher sent one first touch inside the recipient's office hours; the sequencer skipped a stopped lead ahead of it in the queue and sent the day-4 follow-up; the reply engine caught an opt-out sent from a different address, matched the company by the reply subject, suppressed the domain and marked the company rejected. Three emails were sent in total, all to the author.
+
+### What did not go perfectly
+
+- **Draft quality with a small model.** Only 8 of 62 drafts from a 3B model passed the validator on the first try; the other 54 fell back to the safe template and were flagged for review. The causes were banned phrases and length limits. A 7B model did no better on a 10-run sample (1 of 11 passed), so the lever is the prompt or a validation-driven retry, not model size. The fail-safe did its job: nothing unchecked reached review as if it were clean.
+- **Slow tail on CPU.** The 95th percentile run time was about 101 s and draft time about 83 s on a CPU-only VM.
+- **Funnel mix is set by the fixtures.** Counts such as bad mailboxes reflect the assumed mock distribution, not a real-world rate. The figures to trust are completion, routing, compliance and safety behaviour.
+- **Two reply misclassifications** out of 26 in the simulation, neither a missed opt-out.
+- **Not exercised live:** the failed-send retry, the bounce path and LLM reply classification (all covered in simulation only).
+- **Scope.** Synthetic leads and simulated events: the results show the logic behaves as designed, not what a live campaign would return.
 
 ---
 
@@ -245,7 +257,7 @@ Everything below is a setting or a node swap, not a rewrite. The defaults are wh
 | **Send caps, cadence and office hours** | 6 first touches and 10 total per day, day 4/9/15, 09:00 to 17:00 local | Any. |
 | **CRM** | Airtable | Sheets, Notion, Postgres, HubSpot. |
 
-## What this demonstrates
+## Skills used
 
 - **Cost-aware pipeline design**: free filters, deterministic scoring, a mailbox check, then a capped LLM step.
 - **Guard-railed LLM output**: grounding, mechanical validation and a safe fallback.
