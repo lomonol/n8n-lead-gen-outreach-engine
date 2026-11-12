@@ -160,9 +160,9 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "id": "={{ $json.matched_company_id }}",
             "Review Status": "Replied",
-            "Notes": "={{ `Inbound Form Note: ${$json.message}\\n(Previous Outreach Status: ${$json.existing_status || 'Unknown'})` }}"
+            "Notes": "={{ `Inbound Form Note: ${$json.message}\\n(Previous Outreach Status: ${$json.existing_status || 'Unknown'})` }}",
+            "id": "={{ $json.matched_company_id }}"
           },
           "matchingColumns": [
             "id"
@@ -251,7 +251,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ (() => {\n  const d = $('Merge Lead & Sequence Brake Decision').first().json;\n  const isMatch = d.is_cold_lead_match;\n  return JSON.stringify({\n    alert_type: \"urgent\",\n    title: \"🔥 Hot Inbound Lead from Portfolio Contact Form\",\n    message: `From: ${d.name} <${d.email}>\\n` +\n      (isMatch ? `✅ Matched to cold outreach company: ${d.existing_name} (Cold follow-ups frozen!)\\n` : `⭐ New organic inbound visitor\\n`) +\n      `\\nMessage:\\n\"${d.message}\"`\n  });\n})() }}"
+        "body": "={{ (() => {\n  const d = $('Merge Lead & Sequence Brake Decision').first().json;\n  const isMatch = d.is_cold_lead_match;\n  return JSON.stringify({\n    alert_type: \"urgent\",\n    ping_operator: true,\n    title: \"🔥 Hot Inbound Lead from Portfolio Contact Form\",\n    message: `From: ${d.name} <${d.email}>\\n` +\n      (isMatch ? `✅ Matched to cold outreach company: ${d.existing_name} (Cold follow-ups frozen!)\\n` : `⭐ New organic inbound visitor\\n`) +\n      `\\nMessage:\\n\"${d.message}\"`\n  });\n})() }}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -355,7 +355,10 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "errorWorkflow": "WORKFLOW_ID_outreach-error-handler-discord-alert"
   },
   "active": false
 }

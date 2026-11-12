@@ -1,0 +1,89 @@
+{
+  "name": "Outreach - Error Handler (Discord alert)",
+  "nodes": [
+    {
+      "id": "cca202a6-1c0c-4912-aacd-28f6346ab761",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d3099446-e463-4ec8-b659-6742128d9e4c",
+      "name": "Format Outreach Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Builds one short alert for any failed outreach run (lead engine, dispatcher, sequencer, reply engine, portfolio inbound).\nconst j = $input.first().json || {};\nconst ex = j.execution || {};\nconst wf = j.workflow || {};\nconst trig = j.trigger || {};\nconst err = ex.error || trig.error || {};\nconst msg = String(err.message || err.description || 'Unknown error').replace(/\\s+/g, ' ').slice(0, 400);\nconst node = ex.lastNodeExecuted || (err.node && err.node.name) || 'unknown node';\nconst sending = /dispatcher|sequencer/i.test(wf.name || '');\nreturn [{ json: {\n  alert_type: 'error',\n  title: 'Outreach workflow failed: ' + String(wf.name || 'unknown workflow').slice(0, 80),\n  message: 'Node: ' + node + '\\nError: ' + msg +\n    (sending ? '\\nNo email is marked Sent unless the send succeeded; check the draft in Airtable.' : '') +\n    (ex.url ? '\\nExecution: ' + ex.url : (ex.id ? '\\nExecution id: ' + ex.id : '')),\n} }];"
+      }
+    },
+    {
+      "id": "a8aa89cd-d445-49aa-a101-1b6464d3b291",
+      "name": "Alert Discord: Workflow Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://outreach_discord_bot:5005/notify/alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ alert_type: $json.alert_type, title: $json.title, message: $json.message }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Outreach Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Outreach Error": {
+      "main": [
+        [
+          {
+            "node": "Alert Discord: Workflow Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "active": false
+}

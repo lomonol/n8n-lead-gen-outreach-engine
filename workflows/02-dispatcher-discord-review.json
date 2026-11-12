@@ -966,7 +966,8 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "WORKFLOW_ID_outreach-error-handler-discord-alert"
   },
   "active": false
 }

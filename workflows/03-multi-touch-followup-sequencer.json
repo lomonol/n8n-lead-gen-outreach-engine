@@ -507,7 +507,9 @@
           "id": "REPLACE_ME",
           "name": "Airtable Personal Access Token account"
         }
-      }
+      },
+      "alwaysOutputData": true,
+      "executeOnce": true
     },
     {
       "id": "fix-revert-draft-lock",
@@ -753,7 +755,8 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "WORKFLOW_ID_outreach-error-handler-discord-alert"
   },
   "active": false
 }

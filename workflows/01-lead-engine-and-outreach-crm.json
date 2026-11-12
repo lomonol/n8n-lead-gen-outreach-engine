@@ -220,7 +220,7 @@
             {
               "id": "f-domain",
               "name": "domain",
-              "value": "={{\n  (() => {\n    const raw = ($json.website || '').trim();\n    if (!raw) return '';\n    const clean = raw.replace(/^https?:\\/\\//i, '').replace(/^www\\./i, '').split('/')[0].split('?')[0].split(':')[0].toLowerCase().trim();\n    const socialBlocklist = ['facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com', 'x.com', 'linktr.ee', 'wixsite.com', 'yelp.com', 'yellowpages.com', 'tripadvisor.com', 'tiktok.com', 'youtube.com'];\n    if (socialBlocklist.some(s => clean === s || clean.endsWith('.' + s))) {\n      return '';\n    }\n    return clean;\n  })()\n}}",
+              "value": "={{\n  (() => {\n  const raw = ($json.website || '').trim();\n  if (!raw) return '';\n  const host = raw.replace(/^https?:\\/\\//i, '').split(/[\\/?#]/)[0].split(':')[0].toLowerCase().trim().replace(/^www\\./, '').replace(/\\.$/, '');\n  if (!host || !host.includes('.')) return '';\n  const socialBlocklist = ['facebook.com', 'instagram.com', 'linkedin.com', 'twitter.com', 'x.com', 'linktr.ee', 'yelp.com', 'yellowpages.com', 'tripadvisor.com', 'tiktok.com', 'youtube.com', 'google.com', 'g.page', 'goo.gl', 'bit.ly'];\n  if (socialBlocklist.some(s => host === s || host.endsWith('.' + s))) return '';\n  // Website builders: keep the site's own subdomain (name.wixsite.com, name.squarespace.com) as the lead key;\n  // a bare builder host with no site name is not usable.\n  const builders = ['wixsite.com', 'squarespace.com', 'weebly.com', 'godaddysites.com', 'business.site', 'square.site', 'webflow.io', 'wordpress.com', 'carrd.co', 'jimdosite.com', 'mystrikingly.com', 'site123.me', 'editorx.io'];\n  if (builders.includes(host)) return '';\n  return host;\n})()\n}}",
               "type": "string"
             },
             {
@@ -491,7 +491,7 @@
             {
               "id": "eval-has-mx",
               "name": "has_mail_server",
-              "value": "={{ Boolean($('Deduplicate Leads').item.json.domain && $json.Answer && $json.Answer.length > 0) }}",
+              "value": "={{ Boolean($('Deduplicate Leads').item.json.domain && (($json.Answer && $json.Answer.length > 0) || /(^|\\.)(wixsite\\.com|squarespace\\.com|weebly\\.com|godaddysites\\.com|business\\.site|square\\.site|webflow\\.io|wordpress\\.com|carrd\\.co|jimdosite\\.com|mystrikingly\\.com|site123\\.me|editorx\\.io)$/i.test($('Deduplicate Leads').item.json.domain))) }}",
               "type": "boolean"
             },
             {
@@ -523,7 +523,7 @@
               "neverError": true
             }
           },
-          "timeout": 8000
+          "timeout": 15000
         },
         "sendHeaders": true,
         "headerParameters": {
@@ -538,7 +538,11 @@
       "settings": {
         "onError": "continueRegularOutput"
       },
-      "continueOnFail": true
+      "continueOnFail": true,
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
     },
     {
       "id": "88eff1fa-acc6-4f98-b30f-6c673f83a5ae",
@@ -616,7 +620,7 @@
       ],
       "parameters": {
         "promptType": "define",
-        "text": "=BUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS DETECTED FOR THIS BUSINESS:\n{{ $json.signals_menu }}\n\nPROOF POINTS YOU CAN CHOOSE FROM:\n{{ $json.proof_options }}\n\nADJACENT WORKFLOWS SENTENCE TO INCLUDE IN PARAGRAPH 2:\n{{ $json.adjacent_steps }}\n\nOFFER / DUAL-PATH CTA TO USE IN PARAGRAPH 3:\n{{ $json.cta }}\n\nDecide which signal from the menu is the most powerful angle for this business, select the matching proof point, and write the sequence.",
+        "text": "=BUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS DETECTED FOR THIS BUSINESS:\n{{ $json.signals_menu }}\n\nPROOF POINTS YOU CAN CHOOSE FROM:\n{{ $json.proof_options }}\n\nADJACENT WORKFLOWS SENTENCE TO INCLUDE IN PARAGRAPH 2:\n{{ $json.adjacent_steps }}\n\nOFFER / DUAL-PATH CTA TO USE IN PARAGRAPH 3:\n{{ $json.cta }}\n\nDecide which signal from the menu is the most powerful angle for this business, select the matching proof point, and write the sequence.{{ $json.repair_note || '' }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
@@ -774,7 +778,7 @@
       "parameters": {
         "language": "javaScript",
         "mode": "runOnceForEachItem",
-        "jsCode": "const lead = $json;\nconst cfg = $('Config: VA Profile & Settings').first().json;\nconst city = lead.target_city || '';\nconst spelling = /UK|London|Manchester|Australia|Sydney|Melbourne|Brisbane/.test(city)\n  ? 'British/Australian (enquiries, organisation, centre)'\n  : /Canada|Toronto|Vancouver/.test(city) ? 'Canadian (organization, centre)'\n  : 'American (inquiries, organization, center)';\n\n// Title & Role\nconst professionalTitle = 'workflow automation specialist';\nconst article = 'a';\n\nlet proofs = [];\ntry { proofs = JSON.parse(cfg.proof_points || '[]'); } catch (e) { proofs = []; }\n\n// Match category and signal\nconst cat = (lead.target_category || '').toLowerCase();\nlet categoryKey = 'contractor';\nif (/staffing|recruit/i.test(cat)) categoryKey = 'staffing';\nelse if (/property management|hoa/i.test(cat)) categoryKey = 'propertymgmt';\nelse if (/roofing|contractor|construction|hvac|solar|plumb/i.test(cat)) categoryKey = 'contractor';\nelse if (/real estate|property|realtor|broker/i.test(cat)) categoryKey = 'realestate';\nelse if (/ai automation|ai agency/i.test(cat)) categoryKey = 'aaa';\nelse if (/agency|marketing|digital|creative|seo|branding|web/i.test(cat)) categoryKey = 'agency';\nelse if (/law|legal|attorney/i.test(cat)) categoryKey = 'legal';\nelse if (/accounting|cpa|bookkeep/i.test(cat)) categoryKey = 'accounting';\nelse if (/wealth|financial|advis/i.test(cat)) categoryKey = 'advisory';\n\nlet matchingPool = proofs.filter(p => p.categories && p.categories.includes(categoryKey));\n\n// Adjacent examples for Proof Paragraph\nlet adjacentSteps = 'The same setup works for lead intake, CRM updates, and scheduling handoffs.';\nlet focusArea = 'inquiry follow-up';\n\nif (categoryKey === 'contractor') {\n  adjacentSteps = 'The same setup works for service dispatching, quote follow-ups, and job-completion invoicing.';\n  focusArea = 'review follow-up';\n} else if (categoryKey === 'realestate') {\n  adjacentSteps = 'The same setup works for new portal inquiries, showing requests, and CRM status updates.';\n  focusArea = 'property inquiry routing';\n} else if (categoryKey === 'agency' || categoryKey === 'aaa') {\n  adjacentSteps = 'The same setup works for client onboarding, webhook handoffs, and project board creation.';\n  focusArea = 'client onboarding';\n} else if (categoryKey === 'legal' || categoryKey === 'accounting') {\n  adjacentSteps = 'The same setup works for document collection, intake form triage, and calendar scheduling.';\n  focusArea = 'consultation intake';\n}\n\nif (matchingPool.length === 0) matchingPool = proofs;\n\n// Format proofs for LLM menu\nconst proofOptionsFormatted = matchingPool.map((p, idx) => `[Option ${idx + 1}] ${p.text}`).join('\\n');\n\n// Format detected signals menu for LLM\nconst signals = lead.detected_signals || [];\nconst signalsMenuFormatted = signals.map((s, idx) => `${idx + 1}. [${s.key}] ${s.fact}`).join('\\n');\n\n// Claude-refined Dual-Path CTA\nconst refinedCta = `I'd be glad to map out and build a working sample of that for your setup for free, no call needed. If ${focusArea} isn't your main bottleneck, tell me what is and I'll build a small sample for that instead. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`;\n\nlet samples = [];\ntry { samples = JSON.parse(cfg.writing_samples || '[]'); } catch (e) { samples = []; }\nconst picked = samples.sort(() => Math.random() - 0.5).slice(0, 2).join('\\n---\\n');\n\nconst cleanName = lead.clean_business_name || lead.business_name || '';\n\nlet greeting = `Hi ${cleanName} team,`;\nif (cleanName && cleanName.split(' ').length > 3) {\n  greeting = 'Hi there,';\n}\n\nif (lead.extracted_email) {\n  const userPart = lead.extracted_email.split('@')[0].toLowerCase();\n  const genericPrefixes = [\n    'info', 'contact', 'support', 'sales', 'admin', 'hello', 'office', 'team',\n    'help', 'inquiries', 'enquiries', 'service', 'services', 'marketing', 'careers',\n    'jobs', 'billing', 'accounting', 'reception', 'hr', 'press', 'media', 'general',\n    'frontdesk', 'operations', 'dispatch', 'scheduling', 'estimates'\n  ];\n  if (!genericPrefixes.includes(userPart) && userPart.length > 2 && !userPart.includes('+')) {\n    const formatted = userPart.split('.')[0].replace(/[^a-zA-Z]/g, '');\n    if (formatted.length > 2) {\n      greeting = `Hi ${formatted.charAt(0).toUpperCase() + formatted.slice(1)},`;\n    }\n  }\n}\n\nreturn {\n  json: {\n    ...lead,\n    clean_business_name: cleanName,\n    professional_title: professionalTitle,\n    title_with_article: `${article} ${professionalTitle}`,\n    spelling,\n    signals_menu: signalsMenuFormatted,\n    proof_options: proofOptionsFormatted,\n    proof_point: matchingPool[0]?.text || '',\n    adjacent_steps: adjacentSteps,\n    focus_area: focusArea,\n    cta: refinedCta,\n    picked_samples: picked,\n    voice_notes: cfg.voice_notes || '',\n    greeting,\n    sender_first: (lead.sender_name || 'Laurence').split(' ')[0]\n  }\n};"
+        "jsCode": "const lead = $json;\nconst cfg = $('Config: VA Profile & Settings').first().json;\nconst city = lead.target_city || '';\nconst spelling = /UK|London|Manchester|Australia|Sydney|Melbourne|Brisbane/.test(city)\n  ? 'British/Australian (enquiries, organisation, centre)'\n  : /Canada|Toronto|Vancouver/.test(city) ? 'Canadian (organization, centre)'\n  : 'American (inquiries, organization, center)';\n\n// Title & Role\nconst professionalTitle = 'workflow automation specialist';\nconst article = 'a';\n\nlet proofs = [];\ntry { proofs = JSON.parse(cfg.proof_points || '[]'); } catch (e) { proofs = []; }\n\n// Match category and signal\nconst cat = (lead.target_category || '').toLowerCase();\nlet categoryKey = 'contractor';\nif (/staffing|recruit/i.test(cat)) categoryKey = 'staffing';\nelse if (/property management|hoa/i.test(cat)) categoryKey = 'propertymgmt';\nelse if (/roofing|contractor|construction|hvac|solar|plumb/i.test(cat)) categoryKey = 'contractor';\nelse if (/real estate|property|realtor|broker/i.test(cat)) categoryKey = 'realestate';\nelse if (/ai automation|ai agency/i.test(cat)) categoryKey = 'aaa';\nelse if (/agency|marketing|digital|creative|seo|branding|web/i.test(cat)) categoryKey = 'agency';\nelse if (/law|legal|attorney/i.test(cat)) categoryKey = 'legal';\nelse if (/accounting|cpa|bookkeep/i.test(cat)) categoryKey = 'accounting';\nelse if (/wealth|financial|advis/i.test(cat)) categoryKey = 'advisory';\n\nlet matchingPool = proofs.filter(p => p.categories && p.categories.includes(categoryKey));\n\n// Adjacent examples for Proof Paragraph\nlet adjacentSteps = 'The same setup works for lead intake, CRM updates, and scheduling handoffs.';\nlet focusArea = 'inquiry follow-up';\n\nif (categoryKey === 'contractor') {\n  adjacentSteps = 'The same setup works for service dispatching, quote follow-ups, and job-completion invoicing.';\n  focusArea = 'review follow-up';\n} else if (categoryKey === 'realestate') {\n  adjacentSteps = 'The same setup works for new portal inquiries, showing requests, and CRM status updates.';\n  focusArea = 'property inquiry routing';\n} else if (categoryKey === 'agency' || categoryKey === 'aaa') {\n  adjacentSteps = 'The same setup works for client onboarding, webhook handoffs, and project board creation.';\n  focusArea = 'client onboarding';\n} else if (categoryKey === 'legal' || categoryKey === 'accounting') {\n  adjacentSteps = 'The same setup works for document collection, intake form triage, and calendar scheduling.';\n  focusArea = 'consultation intake';\n}\n\nif (matchingPool.length === 0) matchingPool = proofs;\n\n// Format proofs for LLM menu\nconst proofOptionsFormatted = matchingPool.map((p, idx) => `[Option ${idx + 1}] ${p.text}`).join('\\n');\n\n// Format detected signals menu for LLM\nconst signals = lead.detected_signals || [];\nconst signalsMenuFormatted = signals.map((s, idx) => `${idx + 1}. [${s.key}] ${s.fact}`).join('\\n');\n\n// Claude-refined Dual-Path CTA\nconst refinedCta = `I'd be glad to map out and build a working sample of that for your setup for free, no call needed. If ${focusArea} isn't your main bottleneck, tell me what is and I'll build a small sample for that instead. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`;\n\nlet samples = [];\ntry { samples = JSON.parse(cfg.writing_samples || '[]'); } catch (e) { samples = []; }\nconst picked = samples.sort(() => Math.random() - 0.5).slice(0, 2).join('\\n---\\n');\n\nconst cleanName = lead.clean_business_name || lead.business_name || '';\n\nlet greeting = `Hi ${cleanName} team,`;\nif (cleanName && cleanName.split(' ').length > 3) {\n  greeting = 'Hi there,';\n}\n\n// Use a first name only when the address is clearly a person's at the company's own domain\n// (first.last@ or first_last@). Webmail usernames (you@example.com) and run-together handles\n// (jsmith@) would read badly, so those keep the team greeting.\nif (lead.extracted_email && lead.email_type === 'direct') {\n  const userPart = lead.extracted_email.split('@')[0].toLowerCase();\n  const m = userPart.match(/^([a-z]{3,15})[._-][a-z]{2,20}$/);\n  if (m) greeting = `Hi ${m[1].charAt(0).toUpperCase() + m[1].slice(1)},`;\n}\n\nreturn {\n  json: {\n    ...lead,\n    clean_business_name: cleanName,\n    professional_title: professionalTitle,\n    title_with_article: `${article} ${professionalTitle}`,\n    spelling,\n    signals_menu: signalsMenuFormatted,\n    proof_options: proofOptionsFormatted,\n    proof_point: matchingPool[0]?.text || '',\n    adjacent_steps: adjacentSteps,\n    focus_area: focusArea,\n    cta: refinedCta,\n    picked_samples: picked,\n    voice_notes: cfg.voice_notes || '',\n    greeting,\n    sender_first: (lead.sender_name || 'Laurence').split(' ')[0]\n  }\n};"
       }
     },
     {
@@ -789,7 +793,7 @@
       "parameters": {
         "language": "javaScript",
         "mode": "runOnceForEachItem",
-        "jsCode": "const out = $json.output || $json;\n\nlet lead = {};\ntry {\n  lead = $('Prepare Writing Inputs').item.json;\n} catch (e) {\n  try {\n    lead = $('Prepare Writing Inputs').itemMatching($itemIndex).json;\n  } catch (e2) {\n    lead = $('Prepare Writing Inputs').first().json || {};\n  }\n}\n\nconst errors = [];\nconst wc = s => (s || '').trim().split(/\\s+/).filter(Boolean).length;\nconst KEYS = ['subject','email_1','followup_1','followup_2','followup_3','chosen_signal','hook_evidence','proof_used'];\nKEYS.forEach(k => { if (typeof out[k] !== 'string' || !out[k].trim()) errors.push(`missing ${k}`); });\n\nlet finalDraft = { ...out };\nlet needsReview = false;\n\n// 1. Programmatic Deterministic Cleaning (Zero API Requests)\nif (!errors.length) {\n  // Enforce lowercase subject\n  if (finalDraft.subject) {\n    finalDraft.subject = finalDraft.subject.toLowerCase().trim();\n  }\n\n  // Remove em dashes and en dashes\n  ['subject', 'email_1', 'followup_1', 'followup_2', 'followup_3'].forEach(k => {\n    if (finalDraft[k]) {\n      finalDraft[k] = finalDraft[k].replace(/\\s*[—–]\\s*/g, ', ');\n      finalDraft[k] = finalDraft[k].replace(/!/g, '.'); // Remove exclamation marks\n      finalDraft[k] = finalDraft[k].replace(/\\s{2,}/g, ' ').trim();\n    }\n  });\n\n  // Check word counts\n  const LIMITS = { email_1:[70,185], followup_1:[30,85], followup_2:[20,70], followup_3:[15,55] };\n  for (const [k,[lo,hi]] of Object.entries(LIMITS)) {\n    const n = wc(finalDraft[k]);\n    if (n < lo || n > hi) errors.push(`${k} is ${n} words, must be ${lo}-${hi}`);\n  }\n\n  // Clean banned phrases\n  const BANNED = ['impressive','amazing','great','love','passionate','streamline','leverage',\n    'game-changer','cutting-edge','solutions','synergy','hope this finds','reaching out',\n    'touch base','just checking in','circle back','following up'];\n  const allText = [finalDraft.subject, finalDraft.email_1, finalDraft.followup_1, finalDraft.followup_2, finalDraft.followup_3].join(' ').toLowerCase();\n  BANNED.forEach(w => {\n    const rx = new RegExp('\\\\b' + w.replace('-', '[- ]') + '\\\\b', 'i');\n    if (rx.test(allText)) {\n      errors.push(`banned phrase: ${w}`);\n    }\n  });\n}\n\n// 2. Fallback Template if LLM completely failed (Zero extra LLM calls)\nif (errors.length > 0 || !out.email_1) {\n  needsReview = true;\n  const biz = lead.clean_business_name || lead.business_name || 'your team';\n  finalDraft = {\n    chosen_signal: lead.signal_type || 'local_presence',\n    hook_evidence: lead.signal_fact || `${biz} is based in ${lead.target_city || 'your area'}.`,\n    proof_used: lead.proof_point || 'built back-office automations in n8n that eliminate manual data entry between forms, CRMs, and team communication tools',\n    subject: `workflow note for ${(biz).toLowerCase()}`,\n    email_1: `I was looking into ${biz} in ${lead.target_city || 'your area'} and noticed your strong presence on Google. With professional teams handling steady inbound inquiries, I was curious: how does your staff currently manage the handoff between new client inquiries and scheduling consultations?\\n\\nI'm ${lead.sender_first || 'Laurence'}, an automation specialist based in Manila. I build custom n8n workflows that eliminate repetitive admin around intake triage, calendar bookings, and CRM updates.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`,\n    followup_1: `One quick note on this: the sample pipeline I map out connects your intake forms directly into your CRM and alerts your team without manual data entry.\\n\\nJust drop the names of 2 or 3 tools your team uses, and I will build the working demo for you.`,\n    followup_2: `Quick question on this: is client intake and calendar scheduling something your operations manager already has completely handled in-house?\\n\\nIf that process is already covered smoothly on your end, just let me know and I will gladly drop it. If not, the free working sample offer still stands.`,\n    followup_3: `Final note from me on this. If the timing is not right or your team is focused on other priorities, no worries at all.\\n\\nIf you ever want to eliminate manual handoffs between your forms, CRM, and calendars in the future, the offer stands.`\n  };\n}\n\nreturn {\n  json: {\n    ...lead,\n    draft: finalDraft,\n    valid: errors.length === 0,\n    needs_review: Boolean(needsReview || lead.needs_review),\n    clean_errors: errors\n  }\n};"
+        "jsCode": "// Validate & Clean Draft (v2, 2026-11-12)\n// 1. Clean deterministically: dashes, \"!\", emojis, stray greetings/sign-offs, banned words -> plain swaps.\n// 2. Check each field on its own. A bad follow-up or subject is swapped for the safe template version;\n//    only a bad email_1 (the personalised part) sends the whole draft to the template.\n// 3. If this is the first pass and email_1 still fails, set needs_repair so the workflow can ask the LLM once more.\nconst out = $json.output || $json;\n// Repair pass = this item went through 'Prepare Repair Prompt' before the LLM (its input carries repair_note).\nlet isRepairPass = Boolean($json.repair_pass);\ntry { isRepairPass = isRepairPass || Boolean($('If: Provider is OpenAI?').item.json.repair_note); } catch (e) {}\n\nlet lead = {};\ntry { lead = $('Prepare Writing Inputs').item.json; } catch (e) {\n  try { lead = $('Prepare Writing Inputs').itemMatching($itemIndex).json; } catch (e2) {\n    try { lead = $('Prepare Writing Inputs').first().json || {}; } catch (e3) { lead = {}; }\n  }\n}\n\nconst wc = s => (s || '').trim().split(/\\s+/).filter(Boolean).length;\nconst LIMITS = { email_1: [70, 185], followup_1: [30, 85], followup_2: [20, 70], followup_3: [15, 55] };\nconst BODY = ['email_1', 'followup_1', 'followup_2', 'followup_3'];\n\n// Banned phrase -> safe replacement. Inflections are covered; \"a/an\" before a swapped adjective is fixed.\nconst SWAPS = [\n  [/\\b(an?\\s+)?impressive(ly)?\\b/gi, (m, a, ly) => (a ? 'a ' : '') + (ly ? 'clearly' : 'solid')],\n  [/\\b(an?\\s+)?amazing(ly)?\\b/gi, (m, a, ly) => (a ? 'a ' : '') + (ly ? 'very' : 'strong')],\n  [/\\b(an?\\s+)?great(ly)?\\b/gi, (m, a, ly) => (a ? 'a ' : '') + (ly ? 'a lot' : 'good')],\n  [/\\bi'?d love to\\b/gi, \"I'd like to\"], [/\\bwould love to\\b/gi, 'would like to'],\n  [/\\blov(e|es|ed|ing)\\b/gi, (m, s) => ({ e: 'like', es: 'likes', ed: 'liked', ing: 'liking' })[s.toLowerCase()]],\n  [/\\bpassionate(ly)?\\b/gi, (m, ly) => ly ? 'closely' : 'focused'],\n  [/\\bstreamlin(e|es|ed|ing)\\b/gi, (m, s) => ({ e: 'simplify', es: 'simplifies', ed: 'simplified', ing: 'simplifying' })[s.toLowerCase()]],\n  [/\\bleverag(e|es|ed|ing)\\b/gi, (m, s) => ({ e: 'use', es: 'uses', ed: 'used', ing: 'using' })[s.toLowerCase()]],\n  [/\\b(an?\\s+)?game[- ]changers?\\b/gi, (m, a) => (a ? 'a ' : '') + 'real help'],\n  [/\\bcutting[- ]edge\\b/gi, 'modern'],\n  [/\\bsolutions\\b/gi, 'systems'],\n  [/\\bsynerg(y|ies)\\b/gi, 'fit'],\n  [/[^.?\\n]*\\bhope this (email |note |message )?finds you[^.?\\n]*[.?]?\\s*/gi, ''],\n  [/\\breaching out\\b/gi, 'writing'],\n  [/\\btouch(ing)? base\\b/gi, (m, ing) => ing ? 'talking' : 'talk'],\n  [/\\bjust checking in\\b/gi, 'a quick note'],\n  [/\\bcircl(e|ing) back\\b/gi, (m, s) => s.toLowerCase() === 'e' ? 'come back' : 'coming back'],\n  [/\\bfollowing up\\b/gi, 'writing again'],\n];\nconst BANNED_RX = [\n  /\\bimpressive/i, /\\bamazing/i, /\\bgreat(ly)?\\b/i, /\\blov(e|es|ed|ing)\\b/i, /\\bpassionate/i,\n  /\\bstreamlin/i, /\\bleverag/i, /\\bgame[- ]changer/i, /\\bcutting[- ]edge\\b/i, /\\bsolutions\\b/i,\n  /\\bsynerg/i, /\\bhope this .{0,10}finds\\b/i, /\\breaching out\\b/i, /\\btouch(ing)? base\\b/i,\n  /\\bjust checking in\\b/i, /\\bcircl(e|ing) back\\b/i, /\\bfollowing up\\b/i,\n];\n\nfunction cleanBody(s) {\n  let t = String(s || '').replace(/\\r/g, '');\n  t = t.replace(/^\\s*subject:.*\\n+/i, '');                                   // stray subject line\n  t = t.replace(/^\\s*(hi|hello|hey|dear)\\b[^\\n]{0,60}\\n+/i, '');            // greeting (Assemble adds its own)\n  t = t.replace(/\\n+\\s*(best|best regards|kind regards|regards|thanks|thank you|cheers|sincerely|warmly)\\b[^\\n]{0,40}(\\n[^\\n]{0,60}){0,3}\\s*$/i, ''); // sign-off block\n  t = t.replace(/\\n+\\s*-?\\s*laurence[^\\n]{0,60}\\s*$/i, '');                  // bare name sign-off\n  t = t.replace(/\\s*[—–]\\s*/g, ', ').replace(/!/g, '.');\n  t = t.replace(/[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}\\u{FE0F}]/gu, '');\n  for (const [rx, rep] of SWAPS) t = t.replace(rx, rep);\n  t = t.replace(/[ \\t]{2,}/g, ' ').replace(/ +([,.?])/g, '$1').replace(/,\\s*,/g, ',').replace(/\\.{2,}/g, '.');\n  t = t.replace(/(^|[.?]\\s+|\\n)([a-z])/g, (m, p, c) => p + c.toUpperCase());   // sentence case after a removed clause\n  return t.split('\\n').map(l => l.trim()).join('\\n').replace(/\\n{3,}/g, '\\n\\n').trim();\n}\nfunction cleanSubject(s) {\n  let t = String(s || '').replace(/^\\s*subject:\\s*/i, '').replace(/[\"'`]/g, '');\n  t = t.replace(/\\s*[—–]\\s*/g, ' ').replace(/[!?.]+$/g, '').replace(/!/g, '');\n  for (const [rx, rep] of SWAPS) t = t.replace(rx, rep);\n  return t.toLowerCase().replace(/\\s{2,}/g, ' ').trim();\n}\n\nconst biz = lead.clean_business_name || lead.business_name || 'your team';\nconst city = lead.target_city || 'your area';\nconst TEMPLATE = {\n  chosen_signal: lead.signal_type || lead.chosen_signal || 'local_presence',\n  hook_evidence: lead.signal_fact || `${biz} is based in ${city}.`,\n  proof_used: lead.proof_point || 'built back-office automations in n8n that eliminate manual data entry between forms, CRMs, and team communication tools',\n  subject: `workflow note for ${biz.toLowerCase()}`,\n  email_1: `I was looking into ${biz} in ${city} and noticed your strong presence on Google. With professional teams handling steady inbound inquiries, I was curious: how does your staff currently manage the handoff between new client inquiries and scheduling consultations?\\n\\nI'm ${lead.sender_first || 'Laurence'}, an automation specialist based in Manila. I build custom n8n workflows that eliminate repetitive admin around intake triage, calendar bookings, and CRM updates.\\n\\nI'd be glad to map out and build a working sample for your setup for free. No call needed first. Just let me know what tools your team uses and I'll send over a video demo. If it helps, we can talk. If not, no worries.`,\n  followup_1: `One quick note on this: the sample pipeline I map out connects your intake forms directly into your CRM and alerts your team without manual data entry.\\n\\nJust drop the names of 2 or 3 tools your team uses, and I will build the working demo for you.`,\n  followup_2: `Quick question on this: is client intake and calendar scheduling something your operations manager already has completely handled in-house?\\n\\nIf that process is already covered smoothly on your end, just let me know and I will gladly drop it. If not, the free working sample offer still stands.`,\n  followup_3: `Final note from me on this. If the timing is not right or your team is focused on other priorities, no worries at all.\\n\\nIf you ever want to eliminate manual handoffs between your forms, CRM, and calendars in the future, the offer stands.`,\n};\n\nconst draft = {};\nconst fieldErrors = {};          // field -> [reasons]\nconst addErr = (k, msg) => { (fieldErrors[k] = fieldErrors[k] || []).push(msg); };\n\n// Metadata: fill from the lead rather than failing the draft.\nfor (const k of ['chosen_signal', 'hook_evidence', 'proof_used']) {\n  draft[k] = typeof out[k] === 'string' && out[k].trim() ? out[k].trim() : TEMPLATE[k];\n}\n\ndraft.subject = cleanSubject(out.subject);\nconst sw = wc(draft.subject);\nif (!draft.subject) addErr('subject', 'missing');\nelse if (sw < 3 || sw > 8) addErr('subject', `${sw} words, must be 3-8`);\n\nfor (const k of BODY) {\n  if (typeof out[k] !== 'string' || !out[k].trim()) { addErr(k, 'missing'); draft[k] = ''; continue; }\n  draft[k] = cleanBody(out[k]);\n  const [lo, hi] = LIMITS[k];\n  const n = wc(draft[k]);\n  if (n < lo || n > hi) addErr(k, `${n} words, must be ${lo}-${hi}`);\n}\nfor (const k of ['subject', ...BODY]) {\n  for (const rx of BANNED_RX) if (draft[k] && rx.test(draft[k])) addErr(k, `banned phrase left: ${rx.source}`);\n  if (draft[k] && /\\b(virtual assistant|\\bVA\\b)/.test(draft[k])) addErr(k, 'says virtual assistant/VA');\n}\n\nconst errors = Object.entries(fieldErrors).flatMap(([k, v]) => v.map(m => `${k}: ${m}`));\nconst email1Ok = !fieldErrors.email_1;\nconst fieldsReplaced = [];\nlet usedTemplate = false;\nlet needsRepair = false;\n\nif (!email1Ok && !isRepairPass) {\n  needsRepair = true;             // first pass: let the workflow ask the LLM to fix it once\n} else if (!email1Ok) {\n  usedTemplate = true;            // repair pass also failed: whole safe template\n  Object.assign(draft, TEMPLATE);\n} else {\n  for (const k of ['subject', 'followup_1', 'followup_2', 'followup_3']) {\n    if (fieldErrors[k]) { draft[k] = TEMPLATE[k]; fieldsReplaced.push(k); }\n  }\n}\n\nreturn {\n  json: {\n    ...lead,\n    draft,\n    valid: email1Ok,                                  // the personalised email survived\n    fully_valid: errors.length === 0,                 // nothing had to be swapped\n    used_template: usedTemplate,\n    fields_replaced: fieldsReplaced,\n    needs_repair: needsRepair,\n    repair_pass: isRepairPass,\n    repair_errors: needsRepair ? errors.join('\\n') : '',\n    rejected_output: needsRepair ? out : undefined,\n    needs_review: Boolean(usedTemplate || lead.needs_review),\n    clean_errors: errors,\n  },\n};\n"
       }
     },
     {
@@ -1165,7 +1169,7 @@
       ],
       "parameters": {
         "promptType": "define",
-        "text": "=BUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS DETECTED FOR THIS BUSINESS:\n{{ $json.signals_menu }}\n\nPROOF POINTS YOU CAN CHOOSE FROM:\n{{ $json.proof_options }}\n\nADJACENT WORKFLOWS SENTENCE TO INCLUDE IN PARAGRAPH 2:\n{{ $json.adjacent_steps }}\n\nOFFER / DUAL-PATH CTA TO USE IN PARAGRAPH 3:\n{{ $json.cta }}\n\nDecide which signal from the menu is the most powerful angle for this business, select the matching proof point, and write the sequence.",
+        "text": "=BUSINESS: {{ $json.clean_business_name }} ({{ $json.target_category }}, {{ $json.target_city }})\nMY ROLE TITLE: {{ $json.title_with_article }}\n\nMENU OF VERIFIED SIGNALS DETECTED FOR THIS BUSINESS:\n{{ $json.signals_menu }}\n\nPROOF POINTS YOU CAN CHOOSE FROM:\n{{ $json.proof_options }}\n\nADJACENT WORKFLOWS SENTENCE TO INCLUDE IN PARAGRAPH 2:\n{{ $json.adjacent_steps }}\n\nOFFER / DUAL-PATH CTA TO USE IN PARAGRAPH 3:\n{{ $json.cta }}\n\nDecide which signal from the menu is the most powerful angle for this business, select the matching proof point, and write the sequence.{{ $json.repair_note || '' }}",
         "hasOutputParser": true,
         "messages": {
           "messageValues": [
@@ -1282,8 +1286,8 @@
             "Category": "={{ $json.target_category || '' }}",
             "Role": "={{ $json.va_role || 'Automation VA' }}",
             "ICP Score": "={{ $json.icp_score || 0 }}",
-            "Tier": "={{ ($json.suppression_reason || '') === 'No contact email discovered on website' ? 'Parked' : 'Disqualified' }}",
-            "Review Status": "={{ (() => { const r = $json.suppression_reason || ''; if (r === 'No contact email discovered on website') return 'No Email Yet'; if (/^No usable website/.test(r)) return 'No Website'; if (/^Mailbox check failed: unverified/.test(r)) return 'Rejected'; if (/^Mailbox check failed/.test(r)) return 'Bad Email'; return 'Disqualified'; })() }}",
+            "Tier": "={{ (() => { const r = $json.suppression_reason || ''; return (r === 'No contact email discovered on website' || /^Website fetch failed/.test(r)) ? 'Parked' : 'Disqualified'; })() }}",
+            "Review Status": "={{ (() => { const r = $json.suppression_reason || ''; if (r === 'No contact email discovered on website') return 'No Email Yet'; if (/^Website fetch failed/.test(r)) return 'Rejected'; if (/^No usable website/.test(r)) return 'No Website'; if (/^Mailbox check failed: unverified/.test(r)) return 'Rejected'; if (/^Mailbox check failed/.test(r)) return 'Bad Email'; return 'Disqualified'; })() }}",
             "Signals & Qualification": "={{ $json.icp_score_breakdown || '' }}",
             "Place ID": "={{ $json.place_id || '' }}",
             "Notes": "={{ $json.suppression_reason || 'No contact email found or below qualification threshold.' }}",
@@ -1377,7 +1381,7 @@
       ],
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "const items = $input.all();\nconst PATHS = ['/contact', '/contact-us', '/about', '/team'];\nconst EMAIL_RX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\nconst isJunk = e => /\\.(png|jpe?g|gif|svg|webp|css|js)$/i.test(e) || /sentry|wixpress|example\\.com|domain\\.com|schema\\.org/i.test(e);\nconst hasEmail = html => (String(html || '').match(EMAIL_RX) || []).some(e => !isJunk(e.toLowerCase()));\n\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  let html = String(item.json.data || '');\n  const checked = [];\n  if (!hasEmail(html)) {\n    let domain = '';\n    try { domain = $('Evaluate Mail Server Status').itemMatching(i).json.domain || ''; } catch (e) {}\n    if (domain) {\n      for (const path of PATHS) {\n        checked.push(path);\n        try {\n          const res = await this.helpers.httpRequest({\n            method: 'GET',\n            url: 'https://r.jina.ai/https://' + domain + path,\n            headers: { 'X-Return-Format': 'html' },\n            timeout: 10000,\n          });\n          const body = typeof res === 'string' ? res : JSON.stringify(res || '');\n          html += '\\n' + body;\n          if (hasEmail(body)) break;\n        } catch (e) { /* page missing or timed out: try the next path */ }\n      }\n    }\n  }\n  out.push({ json: { ...item.json, data: html, contact_pages_checked: checked.join(',') }, pairedItem: { item: i } });\n}\nreturn out;"
+        "jsCode": "// Looks for an email on contact pages when the homepage has none.\n// Builder-hosted sites (Wix, Squarespace, ...) are handled: for *.wixsite.com/<site> the pages live under the site path.\n// site_fetch_failed = homepage AND every contact page came back empty/errored (usually a Jina timeout), so\n// 'Mark Website Fetch Retries' can retry the lead instead of parking it as \"no email\".\nconst items = $input.all();\nconst PATHS = ['/contact', '/contact-us', '/about', '/team'];\nconst EMAIL_RX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\nconst isJunk = e => /\\.(png|jpe?g|gif|svg|webp|css|js)$/i.test(e) || /sentry|wixpress|example\\.com|domain\\.com|schema\\.org/i.test(e);\nconst hasEmail = html => (String(html || '').match(EMAIL_RX) || []).some(e => !isJunk(e.toLowerCase()));\nconst PATH_SITES = /(^|\\.)wixsite\\.com$/i;   // site lives under the first path segment\n\nfunction siteBase(website, domain) {\n  try {\n    const u = new URL(/^https?:\\/\\//i.test(website) ? website : 'https://' + website);\n    const host = u.hostname.toLowerCase();\n    if (PATH_SITES.test(host)) {\n      const seg = u.pathname.split('/').filter(Boolean)[0];\n      return 'https://' + host + (seg ? '/' + seg : '');\n    }\n    return 'https://' + host;\n  } catch (e) {\n    return domain ? 'https://' + domain : '';\n  }\n}\n\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const homepage = item.json.error ? '' : String(item.json.data || '');\n  let html = homepage;\n  const checked = [];\n  let contactText = 0;\n  if (!hasEmail(html)) {\n    let lead = {};\n    try { lead = $('Evaluate Mail Server Status').itemMatching(i).json || {}; } catch (e) {}\n    const base = siteBase(lead.website || '', lead.domain || '');\n    if (base) {\n      for (const path of PATHS) {\n        checked.push(path);\n        try {\n          const res = await this.helpers.httpRequest({\n            method: 'GET',\n            url: 'https://r.jina.ai/' + base + path,\n            headers: { 'X-Return-Format': 'html' },\n            timeout: 10000,\n          });\n          const body = typeof res === 'string' ? res : JSON.stringify(res || '');\n          contactText += body.length;\n          html += '\\n' + body;\n          if (hasEmail(body)) break;\n        } catch (e) { /* page missing or timed out: try the next path */ }\n      }\n    }\n  }\n  const siteFetchFailed = homepage.length < 80 && contactText < 80;\n  const { error, ...rest } = item.json;\n  out.push({ json: { ...rest, data: html, contact_pages_checked: checked.join(','), site_fetch_failed: siteFetchFailed, site_fetch_error: error ? String(error.message || error).slice(0, 200) : '' }, pairedItem: { item: i } });\n}\nreturn out;"
       },
       "notes": "If the homepage HTML has no usable email, fetch /contact, /contact-us, /about, /team via Jina and append the HTML so the scoring node can find one. Stops at the first page with an email."
     },
@@ -1476,6 +1480,69 @@
         },
         "options": {}
       }
+    },
+    {
+      "id": "7a061e35-8791-4114-aecb-5f78a46fbf31",
+      "name": "If: Needs Repair?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4340,
+        360
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-needs-repair",
+              "leftValue": "={{ $json.needs_repair === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "74638543-929e-4cc5-a443-bc4933198799",
+      "name": "Prepare Repair Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4340,
+        660
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Builds repair instructions for ONE more LLM attempt when email_1 failed the checks.\n// The item then goes back through If: Provider is OpenAI? and the same LLM chains; the validator\n// sees repair_note on the paired input and treats that run as the final (repair) pass.\nreturn $input.all().map((it, idx) => ({\n  json: {\n    ...it.json,\n    repair_note: `\\n\\nYOUR PREVIOUS DRAFT FAILED THESE CHECKS:\\n${it.json.repair_errors}\\n\\nPREVIOUS DRAFT:\\n${JSON.stringify(it.json.rejected_output || {})}\\n\\nRewrite the whole JSON so every check passes. Keep the good parts. Word counts are for the body text only. email_1 must be 85 to 175 words in three paragraphs. Avoid every banned word, including forms like streamlined or leveraging.`,\n  },\n  pairedItem: { item: idx },\n}));"
+      }
+    },
+    {
+      "id": "53edadb6-8af9-4592-a1f5-93548e4bd985",
+      "name": "Mark Website Fetch Retries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2830,
+        600
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Runs after ICP scoring. A lead whose ONLY failure is \"no email\" because the website could not be fetched\n// (Jina timeout or error on the homepage and every contact page) is marked for a retry instead of being parked,\n// up to 3 attempts per domain. The attempt count is read back from the CRM Notes written by Log Disqualified.\nconst prior = {};\ntry {\n  for (const it of $('Fetch Existing CRM Domains').all()) {\n    const f = it.json.fields || it.json || {};\n    const d = String(f.Domain || '').toLowerCase().trim();\n    const m = String(f.Notes || '').match(/Website fetch failed \\(attempt (\\d+) of 3\\)/);\n    if (d && m) prior[d] = Number(m[1]);\n  }\n} catch (e) {}\n\nreturn $input.all().map((it, i) => {\n  const j = it.json;\n  let fetchFailed = false;\n  try { fetchFailed = Boolean($('Find Email on Contact Pages').itemMatching(i).json.site_fetch_failed); } catch (e) {}\n  if (fetchFailed && j.suppression_reason === 'No contact email discovered on website') {\n    const attempt = (prior[String(j.domain || '').toLowerCase()] || 0) + 1;\n    if (attempt < 3) {\n      return { json: { ...j, site_fetch_failed: true, suppression_reason: `Website fetch failed (attempt ${attempt} of 3), will retry` }, pairedItem: { item: i } };\n    }\n  }\n  return { json: { ...j, site_fetch_failed: fetchFailed }, pairedItem: { item: i } };\n});"
+      }
     }
   ],
   "connections": {
@@ -1561,17 +1628,6 @@
         [
           {
             "node": "Fetch Website Signals (Jina)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "ICP Scoring & Qualification Engine": {
-      "main": [
-        [
-          {
-            "node": "If: Is Lead Qualified?",
             "type": "main",
             "index": 0
           }
@@ -1819,17 +1875,6 @@
         ]
       ]
     },
-    "Validate & Clean Draft": {
-      "main": [
-        [
-          {
-            "node": "Assemble Email & Sequences",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "If: Is Permanently Suppressable?": {
       "main": [
         [
@@ -1949,12 +1994,75 @@
           }
         ]
       ]
+    },
+    "Validate & Clean Draft": {
+      "main": [
+        [
+          {
+            "node": "If: Needs Repair?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If: Needs Repair?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Repair Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Assemble Email & Sequences",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Repair Prompt": {
+      "main": [
+        [
+          {
+            "node": "If: Provider is OpenAI?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ICP Scoring & Qualification Engine": {
+      "main": [
+        [
+          {
+            "node": "Mark Website Fetch Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Website Fetch Retries": {
+      "main": [
+        [
+          {
+            "node": "If: Is Lead Qualified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "WORKFLOW_ID_outreach-error-handler-discord-alert"
   },
   "active": false
 }

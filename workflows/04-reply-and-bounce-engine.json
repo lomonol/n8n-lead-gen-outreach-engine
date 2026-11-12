@@ -124,7 +124,10 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "other (delay, OOO, unsolicited)"
+        }
       }
     },
     {
@@ -156,7 +159,7 @@
           "value": {
             "Domain": "={{ $json.suppression_key }}",
             "Company Name": "={{ $json.failed_recipient || 'Bounced Recipient' }}",
-            "Reason": "Unsubscribed / Requested Removal",
+            "Reason": "Hard Bounce",
             "Notes": "={{ 'Hard bounce (550 / Delivery Failure) on ' + ($json.failed_recipient || 'prospect') + ': ' + ($json.subject || '') }}"
           }
         },
@@ -659,20 +662,23 @@
           "combinator": "and"
         }
       }
+    },
+    {
+      "id": "42a4985c-5baf-4232-ac14-1727d675cc32",
+      "name": "Loop Over Inbound Emails",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        360,
+        600
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
     }
   ],
   "connections": {
-    "Email Trigger (IMAP)": {
-      "main": [
-        [
-          {
-            "node": "Detect Bounce vs OOO vs Human Reply",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Detect Bounce vs OOO vs Human Reply": {
       "main": [
         [
@@ -703,6 +709,13 @@
         [
           {
             "node": "Classify Reply Intent (OpenAI gpt-6-luna)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Inbound Emails",
             "type": "main",
             "index": 0
           }
@@ -879,12 +892,69 @@
           }
         ]
       ]
+    },
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Inbound Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Inbound Emails": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Detect Bounce vs OOO vs Human Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trip Shared Kill-Switch": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Inbound Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Discord: Opt-Out Recorded": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Inbound Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Intent Alert to Discord": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Inbound Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "errorWorkflow": "WORKFLOW_ID_outreach-error-handler-discord-alert"
   },
   "active": false
 }
