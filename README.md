@@ -1,4 +1,4 @@
-# Case Study: Autonomous Lead Generation and Outreach Engine
+# Case Study: Lead Generation and Outreach Automation
 
 **A self-hosted n8n system that finds local businesses, decides which are worth contacting before spending anything on AI, drafts outreach that code checks before a human sees it, and runs approval, sending, follow-ups and reply handling with safety gates at every step.**
 
